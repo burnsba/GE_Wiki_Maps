@@ -10,7 +10,9 @@ local PRINT_OBJECTS = true
 local PRINT_GUARDS = true
 local PRINT_PADS = true
 
-local filename = "frigate\\data.py"
+local mission_name = GameData.get_mission_name(GameData.get_current_mission())
+local filename = ("data\\" .. mission_name .. ".py"):lower()
+console.log("Dumping to " .. filename)
 
 -- ===========================================
 
@@ -52,8 +54,6 @@ if PRINT_TILES then
     end
     file:write("}", "\n")
 end
-
--- (PADs to be restored in places maybe later)
 
 
 local pdp, tile, room
