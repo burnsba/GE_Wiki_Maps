@@ -8,7 +8,7 @@ def seperateGroups(tiles, startTileName, dividingTiles):
     currTile = dict((tile["name"], addr) for addr, tile in tiles.items())[startTileName]
     currGroup = []
     count = 0
-    groupGood = False
+    groupGood = len(dividingTiles) == 0
 
     ##print("Initial tile at 0x{:x}".format(currTile))
 

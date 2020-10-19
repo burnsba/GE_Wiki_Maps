@@ -99,8 +99,11 @@ def getUnscaledEnclosingPlane(td, level_scale):
     assert succ
 
     p_as = [np.dot(n, p) for p in ps]
-    assert len(set(p_as)) == 1, "tile is not flat"  # probably not rounding above if so
-    a = p_as[0]
+    if len(set(p_as)) != 1:
+        print("[!] tile with name {:x} is not flat. Selecting most popular a value with given n".format(td["name"]))
+        a = max([(p_as.count(x),x) for x in set(p_as)])[1]
+    else:
+        a = p_as[0]
 
     # ! Need a standard form, remove gcd
     assert all(x == int(x) for x in n) and a == int(a)

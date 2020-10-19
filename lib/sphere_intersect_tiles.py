@@ -109,7 +109,7 @@ def getSphereIntersection(plane, tileAddrs, sphere_center, sphere_radius, tiles)
     return radius, center, polyAndArcs
 
 
-def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs):
+def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH_HACK_FACTOR=13):
     # NOTE that the ellipse code may be a bit off, particularly the angle.
     # In frigate it's nearly all completely flat
 
@@ -162,7 +162,12 @@ def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs):
                     vectors = [np.subtract(pnt, center) for pnt in pnts]
                     headings = [((180 * atan2(x,z) / pi) + 360 + 90 - ellipse_angle) % 360 for x,y,z in vectors]
 
-                    e = patches.Arc((-cx,cz), width, height, alpha=escape_alpha, ec=escape_colour, linewidth=0.5, angle=ellipse_angle, theta1=headings[0], theta2=headings[1], hatch='-'*13)   # beautiful hack to fill
+                    # Officially .Arc doesn't support filling but we can hack our way to the same result
+                    #   with high enough density hatching. This should be only dependent on resolution,
+                    #   so the fixed value 13 should always work but it can be tuned.
+                    # This does create a bit more work but it saves a lot of painful code.
+                    e = patches.Arc((-cx,cz), width, height, alpha=escape_alpha, ec=escape_colour, linewidth=0.5,
+                        angle=ellipse_angle, theta1=headings[0], theta2=headings[1], hatch='-'*HATCH_HACK_FACTOR)
                     
                     
                     axs.add_patch(e)
