@@ -2,6 +2,8 @@ from lib.seperate_tile_groups import seperateGroups
 from lib.tiles import prepTiles, drawTiles, getGroupBounds, prepPlot, drawTileHardEdges, getTilePlanes
 from lib.object import drawObjects
 from lib.sphere_intersect_tiles import colourSphereIntesectionWithTiles
+from lib.stairs import markStairs
+from lib.path_finding import prepSets, getPathBetweenPads
 import matplotlib.pyplot as plt
 import os
 
@@ -15,12 +17,14 @@ import os
 # FRIGATE SPECIFIC
 
 from level_specific.frigate.divisions import dividingTiles, startTileName
-from data.frigate import tiles, guards, objects, pads, level_scale
+from data.frigate import tiles, guards, objects, pads, level_scale, sets
 from level_specific.frigate.group_names import *
 
-def frig_specific(tilePlanes, tiles, plt, axs):
+def frig_specific(tilePlanes, plt, axs):
+    # ------ Hostage escape areas ------
     HOSTAGE_HEIGHT = 105    # measured, varies +-9 but mostly + so this is pretty fair
     ESCAPE_PAD_NUMS = [0x91, 0x93, 0xA9, 0x94, 0xA8, 0x8f]  # best to worst (when unloaded at least)
+    HOSTAGE_IDS = [0x2c, 0x2d, 0x30, 0x31, 0x34, 0x35]
 
     spheres = []
 
@@ -30,6 +34,22 @@ def frig_specific(tilePlanes, tiles, plt, axs):
         spheres.append((tuple(padPos), 500))
 
     colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs)
+
+    # -----------------------------------
+
+    guardAddrWithId = dict((gd["id"], addr) for addr, gd in guards.items())
+
+    for g_id in HOSTAGE_IDS:
+        np = guards[guardAddrWithId[g_id]]["near_pad"]
+        for tp in ESCAPE_PAD_NUMS:
+
+            # Get the path from near pad to potential target
+            getPathBetweenPads(np, tp, sets, pads)
+
+            # TODO : add code to draw them, in path_finding
+            # We'll need the tile associated to each pad, so we can restrict to our current group
+            # Also we'll need to draw out into boundaries.
+            # We can mostly assume that these paths go over clipping.. but think of the surface 1 secret entrance.
 
 # --------------------------------------------------------
 
@@ -44,65 +64,6 @@ def drawGuards(guards, currentTiles, axs):
 def saveFig(plt, fig, path):
     fig.tight_layout(pad=0)
     plt.savefig(path, bbox_inches='tight', pad_inches=0, dpi=254)   # 254 is 1 pixel per cm in GE world
-
-def connectedComponents(tileAddrs, tiles):
-    stack = []
-    comps = []
-    seen = set([0]) # null tile
-    universe = set(tileAddrs)
-
-    i = 0
-
-    while i < len(tileAddrs):
-        tileAddr = tileAddrs[i]
-        if tileAddr in seen:
-            i += 1
-        else:
-            # New tileAddr
-            stack = [tileAddr]
-            seen.add(tileAddr)
-            currComp = []
-
-            while len(stack) > 0:
-                tileAddr = stack.pop()
-                currComp.append(tileAddr)
-
-                for link in tiles[tileAddr]["links"]:
-                    # Only ever add it to the link once
-                    # Restrict to just the tiles we're interested in
-                    if link not in seen and link in universe:
-                        seen.add(link)
-                        stack.append(link)
-            
-            comps.append(currComp)
-    
-    return comps
-
-
-def markStairs(tilePlanes, tiles, plt):
-    for (n,a), tileAddrs in tilePlanes.items():
-        if n[1] != 0:
-            continue
-        
-        comps = connectedComponents(tileAddrs, tiles)
-
-        # Plane is vertical, so it's just a series of line segments from above
-        # Group into connected components then compare
-
-        # Search for the two most extreme points
-        # This works because if x varies on the line, we are just comparing by x
-        # Otherwise we are just comparing by z
-
-        for comp in comps:
-            min_p = max_p = tiles[comp[0]]["points"][0]
-            for tileAddr in comp:
-                td = tiles[tileAddr]
-                for p in td["points"]:
-                    min_p = min(min_p, p)
-                    max_p = max(max_p, p)
-            
-            xs, zs = zip(min_p, max_p)
-            plt.plot([-x for x in xs], zs, linewidth=0.5, color='b')
             
 
 def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_NO, path):
@@ -110,6 +71,7 @@ def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_N
     prepTiles(tiles)
     tile_groups = seperateGroups(tiles, startTileName, dividingTiles)
     groupBounds = getGroupBounds(tiles, tile_groups)
+    prepSets(sets, pads)
 
     # Group specific preperations
     currentTiles = set(tile_groups[GROUP_NO])
@@ -118,15 +80,15 @@ def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_N
 
     # Draw stuff :) 
     drawTiles(currentTiles, tiles, (0.75, 0.75, 0.75), axs)
+    markStairs(tilePlanes, tiles, (0.4,0.2,0), plt) # make generic
     drawTileHardEdges(currentTiles, tiles, (0.65, 0.65, 0.65), axs)
+
     drawGuards(guards, currentTiles, axs)
     drawObjects(plt, axs, objects, tiles, currentTiles)
 
-    # Testing
-    markStairs(tilePlanes, tiles, plt)
 
     # Call frig specific code
-    frig_specific(tilePlanes, tiles, plt, axs)
+    frig_specific(tilePlanes, plt, axs)
 
     # Save
     saveFig(plt,fig,os.path.join('output', path))

@@ -9,6 +9,7 @@ local PRINT_TILES = true
 local PRINT_OBJECTS = true
 local PRINT_GUARDS = true
 local PRINT_PADS = true
+local PRINT_SETS = true
 
 local mission_name = GameData.get_mission_name(GameData.get_current_mission())
 local filename = ("data\\" .. mission_name .. ".py"):lower()
@@ -181,11 +182,13 @@ if PRINT_GUARDS then
         local pdp = gdr:get_value("position_data_pointer") - 0x80000000
         local pos = PositionData:get_value(pdp, "position")
         local tile = PositionData:get_value(pdp, "tile_pointer") - 0x80000000
+        local near_pad = PositionData.getNearPad(pdp)
         local cr = gdr:get_value("collision_radius")
         local id = gdr:get_value("id")
         file:write(("0x%06X"):format(gdr.current_address) .. " : {", "\n")
         file:write("  \"position\" : (" .. pos.x .. ", " .. pos.z .. "),", "\n") -- ignore y
         file:write("  \"tile\" : " .. ("0x%06X"):format(tile) .. ",", "\n")
+        file:write("  \"near_pad\" : " .. ("0x%04X"):format(near_pad) .. ",", "\n")
         file:write("  \"radius\" : " .. cr .. ",", "\n")
         file:write(("  \"id\" : 0x%04X,"):format(id), "\n")
         file:write("},", "\n")
@@ -198,26 +201,61 @@ if PRINT_PADS then
     file:write("\npads = {", "\n")
 
     local padPtr = PadData.get_start_address()
+    local index = 0
 	while true do
 		local n = PadData:get_value(padPtr, "number")
         if n == -1 then
             break
         end
         local pos = PadData.padPosFromNum(n)
+        local set = PadData:get_value(padPtr, "setIndex")
 
         file:write(("0x%04X : {\n"):format(n))
+        file:write("  \"index\" : " .. index .. ",", "\n")
         file:write("  \"position\" : (" .. pos.x .. ", " .. pos.y .. ", " .. pos.z .. "),", "\n")
         file:write("  \"neighbours\" : [")
         for _, neighbour in ipairs(PadData.get_pad_neighbours(padPtr)) do
             file:write(("0x%04X, "):format(neighbour))
         end
         file:write("],", "\n")
+        file:write(("  \"set\" : 0x%02X,"):format(set), "\n")
         file:write("},", "\n")
     
-		padPtr = padPtr + 0x10
+        padPtr = padPtr + 0x10
+        index = index + 1
     end
     
     file:write("}", "\n")
+end
+
+if PRINT_SETS then
+    -- We say that a set is it's index, unlike for pads where they have a seperate number
+    file:write("\nsets = [", "\n")
+    local setPtr = SetData.get_start_address()
+    while true do
+        local neighbours = SetData.get_set_neighbours(setPtr)
+        if neighbours == nil then
+            break
+        end
+        file:write("{", "\n")
+        file:write("  \"neighbours\" : [")
+        for _, nSet in ipairs(neighbours) do
+            file:write(("0x%02X, "):format(nSet))
+        end
+        file:write("],", "\n")
+
+        local pads = SetData.get_set_pads(setPtr)
+        file:write("  \"pad_indices\" : [")
+        for _, pad in ipairs(pads) do
+            file:write(("0x%04X, "):format(pad))
+        end
+        file:write("],", "\n")
+        file:write("},", "\n")
+
+        -- update
+        setPtr = setPtr + 0xc
+    end
+    file:write("]", "\n")
 end
 
 file:close()
