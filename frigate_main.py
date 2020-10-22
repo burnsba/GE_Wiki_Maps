@@ -3,7 +3,7 @@ from lib.tiles import prepTiles, drawTiles, getGroupBounds, prepPlot, drawTileHa
 from lib.object import drawObjects
 from lib.sphere_intersect_tiles import colourSphereIntesectionWithTiles
 from lib.stairs import markStairs
-from lib.path_finding import prepSets, getPathBetweenPads
+from lib.path_finding import prepSets, getPathBetweenPads, drawPathWithinGroup
 import matplotlib.pyplot as plt
 import os
 
@@ -20,7 +20,7 @@ from level_specific.frigate.divisions import dividingTiles, startTileName
 from data.frigate import tiles, guards, objects, pads, level_scale, sets
 from level_specific.frigate.group_names import *
 
-def frig_specific(tilePlanes, plt, axs):
+def frig_specific(tilePlanes, currentTiles, plt, axs):
     # ------ Hostage escape areas ------
     HOSTAGE_HEIGHT = 105    # measured, varies +-9 but mostly + so this is pretty fair
     ESCAPE_PAD_NUMS = [0x91, 0x93, 0xA9, 0x94, 0xA8, 0x8f]  # best to worst (when unloaded at least)
@@ -40,16 +40,16 @@ def frig_specific(tilePlanes, plt, axs):
     guardAddrWithId = dict((gd["id"], addr) for addr, gd in guards.items())
 
     for g_id in HOSTAGE_IDS:
-        np = guards[guardAddrWithId[g_id]]["near_pad"]
+        hostage = guards[guardAddrWithId[g_id]]
+        np = hostage["near_pad"]
         for tp in ESCAPE_PAD_NUMS:
 
             # Get the path from near pad to potential target
-            getPathBetweenPads(np, tp, sets, pads)
+            path = getPathBetweenPads(np, tp, sets, pads)
 
-            # TODO : add code to draw them, in path_finding
-            # We'll need the tile associated to each pad, so we can restrict to our current group
-            # Also we'll need to draw out into boundaries.
-            # We can mostly assume that these paths go over clipping.. but think of the surface 1 secret entrance.
+            # `hostage` also has ["position"], ["tile"] so we can pass it as an extra first point
+            drawPathWithinGroup(plt, path, pads, currentTiles, hostage)
+
 
 # --------------------------------------------------------
 
@@ -88,7 +88,7 @@ def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_N
 
 
     # Call frig specific code
-    frig_specific(tilePlanes, plt, axs)
+    frig_specific(tilePlanes, currentTiles, plt, axs)
 
     # Save
     saveFig(plt,fig,os.path.join('output', path))

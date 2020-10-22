@@ -200,6 +200,7 @@ end
 if PRINT_PADS then
     file:write("\npads = {", "\n")
 
+    local somePadInfo = memory.read_u32_be(0x075d18) - 0x80000000
     local padPtr = PadData.get_start_address()
     local index = 0
 	while true do
@@ -209,6 +210,7 @@ if PRINT_PADS then
         end
         local pos = PadData.padPosFromNum(n)
         local set = PadData:get_value(padPtr, "setIndex")
+        local assocTile = memory.read_u32_be(somePadInfo + (0x2c * n) + 0x28) - 0x80000000
 
         file:write(("0x%04X : {\n"):format(n))
         file:write("  \"index\" : " .. index .. ",", "\n")
@@ -219,6 +221,7 @@ if PRINT_PADS then
         end
         file:write("],", "\n")
         file:write(("  \"set\" : 0x%02X,"):format(set), "\n")
+        file:write(("  \"tile\" : 0x%06X,"):format(assocTile), "\n")
         file:write("},", "\n")
     
         padPtr = padPtr + 0x10
