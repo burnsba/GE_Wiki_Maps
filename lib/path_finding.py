@@ -103,9 +103,9 @@ def getPathBetweenPads(src_pad, dst_pad, sets, pads):
     ##print("pad path =", ", ".join(map(hex, padPath)))
     return padPath
 
-def drawPathWithinGroup(plt, path, pads, currentTiles, guard=None):
+def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, stdColour='b', padRadius=3):
     # If guard is not None, use their starting point. Should be data.
-    # Should cope with paths entering and leaving the group multiple times, though it's untested
+    # Should cope with paths entering and leaving the group many times, though it's untested
 
     if guard is not None:
         path = [None] + path
@@ -145,31 +145,67 @@ def drawPathWithinGroup(plt, path, pads, currentTiles, guard=None):
     for edge in fullEdges:
         xs, ys, zs = zip(*[pads[path[x]]["position"] for x in edge])
         xs = [-x for x in xs]
-        plt.plot(xs, zs, linewidth=0.5, color='b')
+        plt.plot(xs, zs, linewidth=0.5, color=stdColour)
+        # Mark destinations - source will be the responsibility of
+        # a partial edge, previous complete edge, or is the guard so is covered.
+        axs.add_artist(plt.Circle((xs[1], zs[1]), padRadius, color=stdColour, linewidth=0.5, fill=True))
 
-    # TODO : walk along the partial edges across tiles.
-    # We only need to know which edge we cross, so just dot product with the rotated vector (normal),
-    # Different signs says they cross, in the correct order says we cross them leaving the tile.
-    # So assuming the tiles are convex (reasonable) this method will work.
+    # Walk along the partial edges across tiles, to contain them within the current group
     for p,q in exitingEdges:
         pd = pads[path[p]]
         qd = pads[path[q]]
-        v = tuple(np.subtract(qd["position"],pd["position"]))[0:3:2]
+        startPos = pd["position"][0:3:2]
+        v = tuple(np.subtract(qd["position"][0:3:2],startPos))
         n = [-v[1], v[0]]   # acws
-        np.multiply(n, 1 / np.linalg.norm(n))   # unit normal
-        a = np.dot(n, pd["position"][0:3:2])
+        n = np.multiply(n, 1 / np.linalg.norm(n))   # unit normal
+        a = np.dot(n, startPos)
+
+        if p > q:   # swish
+            axs.add_artist(plt.Circle((-startPos[0], startPos[1]), padRadius, color=stdColour, linewidth=0.5, fill=True))
 
         currTile = pd["tile"]
         targetTile = qd["tile"]
         assert currTile != targetTile   # we're exiting the current tile group, so this is impossible
-        while currTile not in [targetTile, 0]:
-            break
 
-    # Termination will have to be arriving at the target tile OR a null tile.
-    # If a null tile then we'll assume we're in a S1 secret entrance situation, and colour the edge red or something.
+        dispA = dispB = None
+        index = None
+        prevTile = None
+        while currTile in currentTiles and currTile not in [targetTile, 0]:
+            currTile = tiles[currTile]
+            dispA = np.dot(currTile["points"][-1], n)
+            index = -1
 
-    # Then we do need to intersect with that final edge to determine how much of the line to draw.
-    # We can use our 2 dot products from the previous round as weights on the 2 tile points.
+            # Correct sign change in dot products indicates an edge we're leaving over.
+            for i,pnt in enumerate(currTile["points"]):
+                dispB = np.dot(pnt,n)
+                if dispA > a and dispB <= a:
+                    index = i
+                    break
+                dispA = dispB
+
+            assert index != -1
+            prevTile = currTile
+            currTile = currTile["links"][index - 1]
+
+        
+        if currTile != 0:
+            # Compute the intersection point using the weights
+            dispAB = dispB - dispA
+            alpha = (a-dispA) / dispAB
+            beta = (dispB-a) / dispAB
+            intersectP = np.add(np.multiply(beta, prevTile["points"][index-1]), np.multiply(alpha, prevTile["points"][index]))
+            xs = [-pd["position"][0], -intersectP[0]]
+            zs = [pd["position"][2], intersectP[1]]
+            plt.plot(xs, zs, linewidth=0.5, color=stdColour)
+
+        else:
+            # Should be similar to the S1 secret entrance, where the edge goes to the tile above us,
+            #   so you can't walk across tiles to it.
+            # Draw the entire line in red to highlight this.
+            xs, ys, zs = zip(*[pads[path[x]]["position"] for x in [p,q]])
+            xs = [-x for x in xs]
+            plt.plot(xs, zs, linewidth=0.5, color='r')
+            axs.add_artist(plt.Circle((xs[1], zs[1]), padRadius, color='r', linewidth=0.5, fill=True))
 
     if guard is not None:
         del pads[None]

@@ -48,7 +48,7 @@ def frig_specific(tilePlanes, currentTiles, plt, axs):
             path = getPathBetweenPads(np, tp, sets, pads)
 
             # `hostage` also has ["position"], ["tile"] so we can pass it as an extra first point
-            drawPathWithinGroup(plt, path, pads, currentTiles, hostage)
+            drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, hostage)
 
 
 # --------------------------------------------------------
