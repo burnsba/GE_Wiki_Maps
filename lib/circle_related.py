@@ -10,7 +10,8 @@ def roundIfClose(r):
 
 def splitIntoPolygonAndArcs(points, center, radiusSq):
     """
-    Circle and general polygon intersecting, used below but also for door reachability.
+    Breaks the circle down into arcs and the intersection with the given circle. 
+    used below but also for door reachability.
     """
     assert len(points) > 1
 
@@ -24,7 +25,11 @@ def splitIntoPolygonAndArcs(points, center, radiusSq):
     arcLeaves = []
     arcEnters = []
 
+    originalIndices = []
+
     for i,currPoint in enumerate(points):
+        originalIndices.append(len(polygon) - 0.5)
+
         prevPoint = points[i-1]
         ##print("\nConsidering {} -> {}".format(i-1, i))
 
@@ -89,8 +94,7 @@ def splitIntoPolygonAndArcs(points, center, radiusSq):
         arcLeaves = arcLeaves[1:] + [arcLeaves[0]]  # shuffle which we think is correct
     arcs = list(zip(arcEnters, arcLeaves))
 
-    return polygon, arcs
-
+    return polygon, arcs, originalIndices
 
 def getSphereIntersection(plane, tileAddrs, sphere_center, sphere_radius, tiles):
     # Compute distance to the plane. If too far, no intersection
@@ -114,13 +118,12 @@ def getSphereIntersection(plane, tileAddrs, sphere_center, sphere_radius, tiles)
         td = tiles[tileAddr]
         tile_points = [[x,y,z] for (x,z), y in zip(td["points"], td["heights"])]
 
-        polygon, arcs = splitIntoPolygonAndArcs(tile_points, center, radiusSq)
+        polygon, arcs, _ = splitIntoPolygonAndArcs(tile_points, center, radiusSq)
 
         polyAndArcs.append((polygon, arcs))
 
     # Return the radius and center (for arcs), and the list of polygon and arcs
     return radius, center, polyAndArcs
-
 
 def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH_HACK_FACTOR=13):
     # NOTE that the ellipse code may be a bit off, particularly the angle.
@@ -186,4 +189,59 @@ def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH
                     
                     axs.add_patch(e)
 
+def drawDoorReachability(plt, axs, objects, presets, currentTiles):
+    for addr, obj in objects.items():
+        if obj["type"] != "door":
+            continue
+        if obj["tile"] not in currentTiles:
+            continue
+        if obj["extreme_clearance"]:
+            continue
 
+        preset = presets[10000 + obj["preset"]]
+        assert preset["normal_y"][1] > 0.99     # we assume our doors are upright, simplier projection
+
+        pos_x, _, pos_z = preset["position"]
+
+        expansion = 150 # 1.5m expansion, hardcoded in the ASM
+
+        js = [1,1,0,0]
+        ks = [1,0,0,1]
+        change = [-expansion, expansion]  
+        xs = []
+        zs = []
+        pnts = []
+        for j,k in zip(js, ks):
+            doorX = (preset["x_limits"][j] + change[j])
+            doorZ = (preset["z_limits"][k] + change[k])
+            pnts.append((
+                pos_x + preset["normal_x"][0]*doorX + preset["normal_z"][0]*doorZ, 
+                pos_z + preset["normal_x"][2]*doorX + preset["normal_z"][2]*doorZ
+            ))
+
+        colour = (0,0,0,0.25)
+
+        # Circle is centered on the object, not the preset (can differ slightly even when shut)
+        # Radius is 2m
+        cx, cz = obj["position"]
+        RADIUS = 200
+        innerPly, arcs, origIndexInInner = splitIntoPolygonAndArcs(pnts, obj["position"], RADIUS**2)
+        assert len(arcs) > 0    # the corners of the square are 2.25m away, sides 1.5m so we will have arcs
+        for leave, enter in arcs:
+            origIndices = [i for i,newI in enumerate(origIndexInInner) if newI < enter and (leave < newI  or enter < leave)]
+            segPnts = [innerPly[leave]] + [pnts[i-1] for i in origIndices] + [innerPly[enter]]  # -1 is a hack, may not be right generally..
+
+            xs, zs = zip(*segPnts)
+            xs = [-x for x in xs]
+            plt.plot(xs, zs, linewidth=0.5, color=colour)
+
+        leaves, enters = zip(*arcs)
+        gaps = zip(enters, leaves[1:] + (leaves[0],))
+        for gap in gaps:
+            pnts = [innerPly[i] for i in gap]
+            vectors = [np.subtract(pnt, obj["position"]) for pnt in pnts]
+            headings = [((180 * atan2(x,z) / pi) + 360 + 90) % 360 for x,z in vectors]
+
+            e = patches.Arc((-cx,cz), 2*RADIUS, 2*RADIUS, ec=colour, linewidth=0.5,
+                angle=0, theta1=headings[0], theta2=headings[1])
+            axs.add_patch(e)

@@ -1,7 +1,7 @@
 from lib.seperate_tile_groups import seperateGroups
 from lib.tiles import prepTiles, drawTiles, getGroupBounds, prepPlot, drawTileHardEdges, getTilePlanes
 from lib.object import drawObjects
-from lib.sphere_intersect_tiles import colourSphereIntesectionWithTiles
+from lib.circle_related import colourSphereIntesectionWithTiles, drawDoorReachability
 from lib.stairs import markStairs
 from lib.path_finding import prepSets, getPathBetweenPads, drawPathWithinGroup
 import matplotlib.pyplot as plt
@@ -90,41 +90,6 @@ def saveFig(plt, fig, path):
     fig.tight_layout(pad=0)
     plt.savefig(path, bbox_inches='tight', pad_inches=0, dpi=254)   # 254 is 1 pixel per cm in GE world
             
-
-def drawDoorReachability(plt, axs, objects, presets, currentTiles):
-    for addr, obj in objects.items():
-        if obj["type"] != "door":
-            continue
-        if obj["tile"] not in currentTiles:
-            continue
-        if obj["extreme_clearance"]:
-            continue
-
-        preset = presets[10000 + obj["preset"]]
-        assert preset["normal_y"][1] > 0.99     # we assume our doors are upright, simplier projection
-
-        pos_x, _, pos_z = preset["position"]
-
-        expansion = 150 # 1.5m expansion, hardcoded in the ASM
-
-        js = [1,1,0,0]
-        ks = [1,0,0,1]
-        change = [-expansion, expansion]  
-        xs = []
-        zs = []
-        for j,k in zip(js, ks):
-            doorX = (preset["x_limits"][j] + change[j])
-            doorZ = (preset["z_limits"][k] + change[k])
-            xs.append(- (pos_x + preset["normal_x"][0]*doorX + preset["normal_z"][0]*doorZ) )
-            zs.append(+ (pos_z + preset["normal_x"][2]*doorX + preset["normal_z"][2]*doorZ) )
-
-        xs.append(xs[0])
-        zs.append(zs[0])
-        plt.plot(xs, zs, linewidth=0.5, color='r')  #(0.8, 0.8, 0.8, 0.5))
-
-        # Circle is centered on the object, not the preset (can differ slightly even when shut)
-        pos_x, pos_z = obj["position"]
-        axs.add_artist(plt.Circle((-pos_x, pos_z), 200, color='r', linewidth=0.5, fill=False))
 
 
 def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_NO, path):
