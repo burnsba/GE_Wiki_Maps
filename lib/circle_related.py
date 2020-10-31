@@ -1,6 +1,7 @@
 import numpy as np
 from math import atan2, pi, sqrt
 from matplotlib import patches
+from bisect import bisect_left
 
 def roundIfClose(r):
     n = round(r)
@@ -25,10 +26,10 @@ def splitIntoPolygonAndArcs(points, center, radiusSq):
     arcLeaves = []
     arcEnters = []
 
-    originalIndices = []
+    origIndexInInner = []
 
     for i,currPoint in enumerate(points):
-        originalIndices.append(len(polygon) - 0.5)
+        origIndexInInner.append(len(polygon) - 0.5)
 
         prevPoint = points[i-1]
         ##print("\nConsidering {} -> {}".format(i-1, i))
@@ -94,7 +95,7 @@ def splitIntoPolygonAndArcs(points, center, radiusSq):
         arcLeaves = arcLeaves[1:] + [arcLeaves[0]]  # shuffle which we think is correct
     arcs = list(zip(arcEnters, arcLeaves))
 
-    return polygon, arcs, originalIndices
+    return polygon, arcs, origIndexInInner
 
 def getSphereIntersection(plane, tileAddrs, sphere_center, sphere_radius, tiles):
     # Compute distance to the plane. If too far, no intersection
@@ -231,9 +232,17 @@ def drawDoorReachability(plt, axs, objects, presets, currentTiles, excludePreset
         cx, cz = obj["position"]
         RADIUS = 200
         innerPly, arcs, origIndexInInner = splitIntoPolygonAndArcs(pnts, obj["position"], RADIUS**2)
+
         assert len(arcs) > 0    # the corners of the square are 2.25m away, sides 1.5m so we will have arcs
         for leave, enter in arcs:
-            origIndices = [i for i,newI in enumerate(origIndexInInner) if newI < enter and (leave < newI  or enter < leave)]
+            origIndices = [i for i,newI in enumerate(origIndexInInner)
+                if (leave < newI and newI < enter) or               # standard interval
+                (enter < leave) and (newI > leave or newI < enter)  # if they wrap around, it's just got to be above the start or before the end
+            ]
+            # These indices need cycling to have the first 1st
+            split = bisect_left([origIndexInInner[i] for i in origIndices], leave)
+            origIndices = origIndices[split:] + origIndices[:split]
+
             segPnts = [innerPly[leave]] + [pnts[i-1] for i in origIndices] + [innerPly[enter]]  # -1 is a hack, may not be right generally..
 
             xs, zs = zip(*segPnts)
