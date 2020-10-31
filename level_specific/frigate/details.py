@@ -21,3 +21,18 @@ dividingTiles = [
 ]
 
 startTileName = 0x004618
+
+# Doors which we don't want reachability drawn for
+excludeDoorReachPresets = [
+    # Upper middle doors - irrel
+    0x275F,
+    0x2760,
+    0x275E,
+    0x275D,
+    0x275C,
+    0x275B,
+
+    # Door to bug throw is needed for SA despite messyness
+
+    0x2763, # other door to the helicopter, never used.
+]

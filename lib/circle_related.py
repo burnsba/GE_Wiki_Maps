@@ -189,7 +189,7 @@ def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH
                     
                     axs.add_patch(e)
 
-def drawDoorReachability(plt, axs, objects, presets, currentTiles):
+def drawDoorReachability(plt, axs, objects, presets, currentTiles, excludePresets=None):
     for addr, obj in objects.items():
         if obj["type"] != "door":
             continue
@@ -197,6 +197,11 @@ def drawDoorReachability(plt, axs, objects, presets, currentTiles):
             continue
         if obj["extreme_clearance"]:
             continue
+        if excludePresets is not None:
+            if obj["preset"] in excludePresets:
+                continue
+            if obj["preset"] + 10000 in excludePresets:
+                continue
 
         preset = presets[10000 + obj["preset"]]
         assert preset["normal_y"][1] > 0.99     # we assume our doors are upright, simplier projection

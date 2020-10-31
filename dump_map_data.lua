@@ -4,6 +4,7 @@ require "Data\\GE\\ObjectData"
 require "Utilities\\GE\\ObjectDataReader"
 require "Utilities\\GE\\GuardDataReader"
 require "Data\\GE\\PresetData"
+require "Data\\GE\\ScriptData"
 
 -- ===========================================
 local PRINT_TILES = true
@@ -181,6 +182,14 @@ if PRINT_OBJECTS then
     end)
 
     file:write("}", "\n")
+
+    -- activatable objects
+    file:write("activatable_objects = [", "\n")
+    local actObjs = ScriptData.getActivatableObjects()
+    for _, objAddr in ipairs(actObjs) do
+        file:write(("  0x%06X"):format(objAddr) .. ",", "\n")
+    end
+    file:write("]", "\n")
 end
 
 if PRINT_GUARDS then
