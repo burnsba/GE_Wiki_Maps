@@ -8,6 +8,90 @@ def roundIfClose(r):
         return n
     return r
 
+def splitIntoPolygonAndArcs(points, center, radiusSq):
+    """
+    Circle and general polygon intersecting, used below but also for door reachability.
+    """
+    assert len(points) > 1
+
+    def inCircle(p):
+        v = np.subtract(p,center)
+        return np.dot(v,v) <= radiusSq
+
+    # Init
+    inside = inCircle(points[-1])
+    polygon = [points[-1]] if inside else []
+    arcLeaves = []
+    arcEnters = []
+
+    for i,currPoint in enumerate(points):
+        prevPoint = points[i-1]
+        ##print("\nConsidering {} -> {}".format(i-1, i))
+
+        # Find the closest point on (infinite) edge to the circle center
+        edge = np.subtract(currPoint, prevPoint)
+        ##print("Edge = {}".format(edge))
+        w = np.subtract(center, prevPoint)
+        edge_length = np.linalg.norm(edge)
+        closest_a = np.dot(edge,w) / edge_length
+        ##print("Closest a = {}, edge_length = {}".format(closest_a, edge_length))
+        closestPoint = np.add(prevPoint, np.multiply(edge, closest_a / edge_length))
+
+        # Find the range on the edge that is inside
+        w = np.subtract(closestPoint, center)
+        deltaSq = np.dot(w,w)
+        if deltaSq < radiusSq:
+            delta = sqrt(radiusSq - deltaSq)
+            ##print("Infinite line in range, delta = {}".format(delta))
+            entry = max(closest_a - delta, 0)
+            leave = min(closest_a + delta, edge_length)
+
+            if not inside:
+                if leave > entry:
+                    ##print("->")
+                    # we were outside, we've entered back in
+                    pntA = np.add(prevPoint, np.multiply(edge, entry / edge_length))
+                    polygon.append(pntA)
+                    arcLeaves.append(len(polygon) - 1) # we enter, arc leaves
+
+                    pntB = np.add(prevPoint, np.multiply(edge, leave / edge_length))
+                    polygon.append(pntB)    # may be next point, or actual leave
+                    inside = (leave == edge_length)
+                    if not inside:
+                        ##print("<-")
+                        arcEnters.append(len(polygon) - 1)
+            else:
+                if leave > 0:   # don't duplicate the point if we literally leave on it
+                    pntB = np.add(prevPoint, np.multiply(edge, leave / edge_length))
+                    polygon.append(pntB)
+
+                if leave < edge_length:
+                    # we were inside, now we've left
+                    inside = False
+                    ##print("<-")
+                    arcEnters.append(len(polygon) - 1)  # we leave, so arc enters
+
+        else:
+            ##print("Infinite line out of range")
+            if inside:
+                # leave = 0 effectively, don't add previous point but add the arcEnters
+                arcEnters.append(len(polygon) - 1)
+                ##print("<-")
+
+            inside = False  # infinite line is outside
+
+    # Edge case for if we just enter immediately
+    if len(arcLeaves) == len(arcEnters) - 1:
+        arcLeaves.append(points[-1])
+    assert len(arcLeaves) == len(arcEnters)
+
+    if len(arcLeaves) > 0:
+        arcLeaves = arcLeaves[1:] + [arcLeaves[0]]  # shuffle which we think is correct
+    arcs = list(zip(arcEnters, arcLeaves))
+
+    return polygon, arcs
+
+
 def getSphereIntersection(plane, tileAddrs, sphere_center, sphere_radius, tiles):
     # Compute distance to the plane. If too far, no intersection
     n,a = plane
@@ -23,9 +107,6 @@ def getSphereIntersection(plane, tileAddrs, sphere_center, sphere_radius, tiles)
     assert radius > 0
     assert roundIfClose(np.dot(center,n) - a) == 0
 
-    def inCircle(p):
-        v = np.subtract(p,center)
-        return np.dot(v,v) <= radiusSq
 
     polyAndArcs = []
 
@@ -33,76 +114,8 @@ def getSphereIntersection(plane, tileAddrs, sphere_center, sphere_radius, tiles)
         td = tiles[tileAddr]
         tile_points = [[x,y,z] for (x,z), y in zip(td["points"], td["heights"])]
 
-        # Init
-        inside = inCircle(tile_points[-1])
-        polygon = [tile_points[-1]] if inside else []
-        arcLeaves = []
-        arcEnters = []
+        polygon, arcs = splitIntoPolygonAndArcs(tile_points, center, radiusSq)
 
-        for i,currPoint in enumerate(tile_points):
-            prevPoint = tile_points[i-1]
-            ##print("\nConsidering {} -> {}".format(i-1, i))
-
-            # Find the closest point on (infinite) edge to the circle center
-            edge = np.subtract(currPoint, prevPoint)
-            ##print("Edge = {}".format(edge))
-            w = np.subtract(center, prevPoint)
-            edge_length = np.linalg.norm(edge)
-            closest_a = np.dot(edge,w) / edge_length
-            ##print("Closest a = {}, edge_length = {}".format(closest_a, edge_length))
-            closestPoint = np.add(prevPoint, np.multiply(edge, closest_a / edge_length))
-
-            # Find the range on the edge that is inside
-            w = np.subtract(closestPoint, center)
-            deltaSq = np.dot(w,w)
-            if deltaSq < radiusSq:
-                delta = sqrt(radiusSq - deltaSq)
-                ##print("Infinite line in range, delta = {}".format(delta))
-                entry = max(closest_a - delta, 0)
-                leave = min(closest_a + delta, edge_length)
-
-                if not inside:
-                    if leave > entry:
-                        ##print("->")
-                        # we were outside, we've entered back in
-                        pntA = np.add(prevPoint, np.multiply(edge, entry / edge_length))
-                        polygon.append(pntA)
-                        arcLeaves.append(len(polygon) - 1) # we enter, arc leaves
-
-                        pntB = np.add(prevPoint, np.multiply(edge, leave / edge_length))
-                        polygon.append(pntB)    # may be next point, or actual leave
-                        inside = (leave == edge_length)
-                        if not inside:
-                            ##print("<-")
-                            arcEnters.append(len(polygon) - 1)
-                else:
-                    if leave > 0:   # don't duplicate the point if we literally leave on it
-                        pntB = np.add(prevPoint, np.multiply(edge, leave / edge_length))
-                        polygon.append(pntB)
-
-                    if leave < edge_length:
-                        # we were inside, now we've left
-                        inside = False
-                        ##print("<-")
-                        arcEnters.append(len(polygon) - 1)  # we leave, so arc enters
-
-            else:
-                ##print("Infinite line out of range")
-                if inside:
-                    # leave = 0 effectively, don't add previous point but add the arcEnters
-                    arcEnters.append(len(polygon) - 1)
-                    ##print("<-")
-
-                inside = False  # infinite line is outside
-
-        # Edge case for if we just enter immediately
-        if len(arcLeaves) == len(arcEnters) - 1:
-            arcLeaves.append(tile_points[-1])
-        assert len(arcLeaves) == len(arcEnters)
-
-        if len(arcLeaves) > 0:
-            arcLeaves = arcLeaves[1:] + [arcLeaves[0]]  # shuffle which we think is correct
-        arcs = list(zip(arcEnters, arcLeaves))
         polyAndArcs.append((polygon, arcs))
 
     # Return the radius and center (for arcs), and the list of polygon and arcs
