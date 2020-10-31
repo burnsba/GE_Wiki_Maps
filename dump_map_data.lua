@@ -3,6 +3,7 @@ require "Data\\GE\\GameData"
 require "Data\\GE\\ObjectData"
 require "Utilities\\GE\\ObjectDataReader"
 require "Utilities\\GE\\GuardDataReader"
+require "Data\\GE\\PresetData"
 
 -- ===========================================
 local PRINT_TILES = true
@@ -10,6 +11,7 @@ local PRINT_OBJECTS = true
 local PRINT_GUARDS = true
 local PRINT_PADS = true
 local PRINT_SETS = true
+local PRINT_PRESETS = true
 
 local mission_name = GameData.get_mission_name(GameData.get_current_mission())
 local filename = ("data\\" .. mission_name .. ".py"):lower()
@@ -100,10 +102,12 @@ local typeNames = {
 if PRINT_OBJECTS then
     file:write("from math import nan\n")
     file:write("\n\nobjects = {", "\n")
+    local isCollectible = ObjectData.getAllCollectables()
+
     ObjectDataReader.for_each(function(odr)
 
         local tile = 0
-        local position = nil
+        local position = 0
         if odr:has_value(pdpLit) then
             local pdp = odr:get_value(pdpLit)
             if pdp ~= 0 then
@@ -137,6 +141,9 @@ if PRINT_OBJECTS then
                 file:write("],", "\n")
             end
             
+            local collectible = isCollectible[odr.current_address]
+            file:write("  \"collectible\" : " .. (collectible and "True" or "False") .. ",", "\n")
+
             if odr:is_collidable() then
                 local points, min_y, max_y = odr:get_collision_data()
                 file:write("  \"points\" : [")
@@ -259,6 +266,56 @@ if PRINT_SETS then
         setPtr = setPtr + 0xc
     end
     file:write("]", "\n")
+end
+
+if PRINT_PRESETS then
+    file:write("\npresets = {", "\n")
+    local currPresetAddr = PresetData.get_start_address()
+    local presetEnd = PresetData.get_end_address()
+    assert((presetEnd - currPresetAddr) % 0x44 == 0)
+
+    local count = 0
+    while currPresetAddr < presetEnd do
+        -- We output in 0x27XX (100YY) format, since that seems clearer.
+        -- Many cases have their 10000 removed already, i.e. doors
+
+        local pos = PresetData:get_value(currPresetAddr, "position")
+        local norm_x = PresetData:get_value(currPresetAddr, "normal_x")
+        local norm_y = PresetData:get_value(currPresetAddr, "normal_y")
+        local low_x = PresetData:get_value(currPresetAddr, "low_x")
+        local low_y = PresetData:get_value(currPresetAddr, "low_y")
+        local low_z = PresetData:get_value(currPresetAddr, "low_z")
+        local high_x = PresetData:get_value(currPresetAddr, "high_x")
+        local high_y = PresetData:get_value(currPresetAddr, "high_y")
+        local high_z = PresetData:get_value(currPresetAddr, "high_z")
+        local tile = PresetData:get_value(currPresetAddr, "tile_pointer")
+        if (tile > 0) then
+            tile = tile - 0x80000000
+        end
+
+        -- Produce normal_z as cross product
+        local norm_z = {
+            ["z"] = (norm_x.x * norm_y.y - norm_y.x * norm_x.y),
+            ["x"] = (norm_x.y * norm_y.z - norm_y.y * norm_x.z),
+            ["y"] = (norm_x.z * norm_y.x - norm_y.z * norm_x.x),
+        }
+        
+        file:write(("0x%04X : {\n"):format(10000 + count))
+        file:write("  \"position\" : (" .. pos.x .. ", " .. pos.y .. ", " .. pos.z .. "),", "\n")
+        file:write("  \"normal_x\" : (" .. norm_x.x .. ", " .. norm_x.y .. ", " .. norm_x.z .. "),", "\n")
+        file:write("  \"normal_y\" : (" .. norm_y.x .. ", " .. norm_y.y .. ", " .. norm_y.z .. "),", "\n")
+        file:write("  \"normal_z\" : (" .. norm_z.x .. ", " .. norm_z.y .. ", " .. norm_z.z .. "),", "\n")
+        -- we'll produce normal_z in Python
+        file:write(("  \"tile\" : 0x%06X,"):format(tile), "\n")
+        file:write("  \"x_limits\" : (" .. low_x .. ", " .. high_x .. "),", "\n")
+        file:write("  \"y_limits\" : (" .. low_y .. ", " .. high_y .. "),", "\n")
+        file:write("  \"z_limits\" : (" .. low_z .. ", " .. high_z .. "),", "\n")
+        file:write("},", "\n")
+
+        currPresetAddr = currPresetAddr + 0x44
+        count = count + 1
+    end
+    file:write("}", "\n")
 end
 
 file:close()

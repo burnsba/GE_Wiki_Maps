@@ -139,6 +139,7 @@ def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH
             # First off, the angle of the ellipse, which we can get from the normal
             nx, cosA, nz = n
             ellipse_angle = 180 * atan2(nx, nz) / pi   # 0,0 -> 0.
+            cosA = abs(cosA)    # some tiles do point downward
 
             # Then the extent of the squashing
             width = 2*radius

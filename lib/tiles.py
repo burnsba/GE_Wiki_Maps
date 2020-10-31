@@ -134,7 +134,8 @@ def getTilePlanes(currentTiles, tiles, level_scale):
         plane = getUnscaledEnclosingPlane(td, level_scale)
         n,a = plane
 
-        assert n[1] >= 0     # no tiles should be pointing down, relied on elsewhere
+        # Some (bad) tiles do point slightly downward
+        #assert n[1] >= 0, "{:x} : {}".format(tileAddr, n)
 
         if plane in tilePlanes:
             tilePlanes[plane].append(tileAddr)

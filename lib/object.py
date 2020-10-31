@@ -60,6 +60,9 @@ def drawObjects(plt, axs, objects, tiles, currentTiles):
     """
 
     for addr, obj in objects.items():
+        if obj["type"] == "lock":   # TODO locks
+            continue
+
         if obj["tile"] not in currentTiles:
             continue
 
@@ -87,14 +90,14 @@ def drawObjects(plt, axs, objects, tiles, currentTiles):
             cx,cz = obj["center"]
             dists = [euclidDist(obj["center"], p) for p in pnts]
             insetDist = min(min(dists) / 3, MAX_INSET)
-            # Making the inset points properly is a bit tricky
-            insetPnts = [getInsetPoint(i, [(-x, z) for x,z in pnts], insetDist) for i in range(len(pnts))]
         
             # Decide the number and colour of our outlines
             # Flipping x to get reality
             outlines = []
             outlines.append(([(-x, z) for x,z in obj["points"]], 'r' if obj["explosive"] else 'k'))
             if obj["invincible"] and obj["type"] != "door": # everyone knows doors are invincible
+                # Making the inset points properly is a bit tricky
+                insetPnts = [getInsetPoint(i, [(-x, z) for x,z in pnts], insetDist) for i in range(len(pnts))]
                 outlines.append((insetPnts, outlines[0][1]))    # if invincible, add an inset outline the same colour
 
             # Determine if we are far below or above our clipping
