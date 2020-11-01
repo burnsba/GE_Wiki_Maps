@@ -6,7 +6,7 @@ from lib.stairs import markStairs
 from lib.path_finding import prepSets, getPathBetweenPads, drawPathWithinGroup
 import matplotlib.pyplot as plt
 import os
-
+from math import sqrt
 
 # Currently we're going to have a seperate py file for each level
 # Seems sensible since it may want to heavily customised what's drawn,
@@ -115,9 +115,24 @@ def drawActivatables(axs, activatable_objects, objects, currentTiles):
 
 
 def saveFig(plt, fig, path):
+    width, height = fig.get_size_inches()
+
+    # 12.5MP max when rescaling on the wiki.
+    wikiDPI = sqrt(12500000 / (width * height))
+
+    # Pick only sensible scalings - currently just 100% and 50%
+    # We may need to adjust widths of lines.
+    assert wikiDPI >= 127
+    dpi = 127
+
+    if wikiDPI >= 254:
+        dpi = 254
+    else:
+        print("Reduced DPI to {}".format(dpi))
+
     fig.tight_layout(pad=0)
     # (!) reduce the DPI if the map is too large
-    plt.savefig(path, bbox_inches='tight', pad_inches=0, dpi=254)   # 254 is 1 pixel per cm in GE world
+    plt.savefig(path, bbox_inches='tight', pad_inches=0, dpi=dpi)   # 254 is 1 pixel per cm in GE world
             
 
 
