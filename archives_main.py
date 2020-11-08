@@ -12,43 +12,11 @@ from math import sqrt
 # Seems sensible since it may want to heavily customised what's drawn,
 #   i.e. drawing something between guards and objects
 
-
 # --------------------------------------------------------
-# FRIGATE SPECIFIC
+# Archives SPECIFIC
 
-from level_specific.frigate.details import dividingTiles, startTileName, excludeDoorReachPresets
-from data.frigate import tiles, guards, objects, pads, level_scale, sets, presets, activatable_objects
-from level_specific.frigate.group_names import *
-
-def frig_specific(tilePlanes, currentTiles, plt, axs):
-    # ------ Hostage escape areas ------
-    HOSTAGE_HEIGHT = 105    # measured, varies +-9 but mostly + so this is pretty fair
-    ESCAPE_PAD_NUMS = [0x91, 0x93, 0xA9, 0x94, 0xA8, 0x8f]  # best to worst (when unloaded at least)
-    HOSTAGE_IDS = [0x2c, 0x2d, 0x30, 0x31, 0x34, 0x35]
-
-    spheres = []
-
-    for padNum in ESCAPE_PAD_NUMS:
-        padPos = list(pads[padNum]["position"])
-        padPos[1] -= HOSTAGE_HEIGHT
-        spheres.append((tuple(padPos), 500))
-
-    colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs)
-
-    # -----------------------------------
-
-    guardAddrWithId = dict((gd["id"], addr) for addr, gd in guards.items())
-
-    for g_id in HOSTAGE_IDS:
-        hostage = guards[guardAddrWithId[g_id]]
-        np = hostage["near_pad"]
-        for tp in ESCAPE_PAD_NUMS:
-
-            # Get the path from near pad to potential target
-            path = getPathBetweenPads(np, tp, sets, pads)
-
-            # `hostage` also has ["position"], ["tile"] so we can pass it as an extra first point
-            drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, hostage)
+from level_specific.archives.details import dividingTiles, startTileName, excludeDoorReachPresets
+from data.archives import tiles, guards, objects, pads, level_scale, sets, presets, activatable_objects
 
 
 # --------------------------------------------------------
@@ -118,17 +86,21 @@ def saveFig(plt, fig, path):
     width, height = fig.get_size_inches()
 
     # 12.5MP max when rescaling on the wiki.
+    # We can just not rescale though ;) 
     wikiDPI = sqrt(12500000 / (width * height))
+
+    dpi = 254
 
     fig.tight_layout(pad=0)
     # (!) reduce the DPI if the map is too large
-    plt.savefig(path, bbox_inches='tight', pad_inches=0, dpi=254)   # 254 is 1 pixel per cm in GE world
+    plt.savefig(path, bbox_inches='tight', pad_inches=0, dpi=dpi)   # 254 is 1 pixel per cm in GE world
             
 
 
 def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_NO, path):
     # Global (above a specific group) preperations
     prepTiles(tiles)
+
     tile_groups = seperateGroups(tiles, startTileName, dividingTiles)
     groupBounds = getGroupBounds(tiles, tile_groups)
     prepSets(sets, pads)
@@ -150,15 +122,13 @@ def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_N
 
     drawActivatables(axs, activatable_objects, objects, currentTiles)
 
-    # Call frig specific code
-    frig_specific(tilePlanes, currentTiles, plt, axs)
-
     # Save
     saveFig(plt,fig,os.path.join('output', path))
 
 
 if __name__ == "__main__":
-    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GRP_DECK_AND_UPSTAIRS, 'frigate_deck_and_upstairs')
-    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GRP_MIDSHIPS, 'frigate_midships')
-    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GRP_LOWER_DECK, 'frigate_lower_deck')
-    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GRP_ENGINE_ROOM, 'frigate_engine_room')
+    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 0, 'archives_upstairs')
+    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 1, 'archives_downstairs')
+    ##main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 2, 'archives_attic')
+    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 3, 'archives_start')
+    ##[4] is the ending

@@ -119,22 +119,38 @@ def drawObjects(plt, axs, objects, tiles, currentTiles):
                 print("Unsupported door type {}".format(obj["door_type"]))
             if obj["extreme_clearance"]:
                 pass #print("Door with extreme clearance ignored")
-            if "hinge" in obj and not obj["extreme_clearance"]:
-                dists = [ euclidDist(obj["hinge"], p) for p in obj["points"] ]
+            if len(obj.get("hinges", [])) > 0 and not obj["extreme_clearance"]:
+                assert len(obj["hinges"]) <= 2
+                openBackward = (obj["flags_1"] >> 29) & 0x1 == 1
 
-                # Angle will always be counter-clockwise (for these simple doors anyway)
-                # So we'll go one step clockwise on the points
-                min_d = min(dists)
-                pivotPointI = [i for i,d in enumerate(dists) if d == min_d][0]
-                nI = (pivotPointI+1) % len(obj["points"])
-                nx,nz = obj["points"][nI]
-                hx, hz = obj["hinge"]
-                shutAngle = atan2(nx-hx,nz-hz) * 180 / pi
+                for hi, hingePos in enumerate(obj["hinges"]):
+                    # We find the closest point to the hinge,
+                    # then go one step clockwise / acws on the points
+                    # And draw an arc through that point, in the correct direction
 
-                circ = 2*dists[nI]
+                    # Doors which only open backward are awkward..
+                    if openBackward and len(obj["hinges"]) == 1:
+                        hi = 1-hi
 
-                e = patches.Arc((-hx,hz), circ, circ, linewidth=0.5, angle=0.0, theta1=shutAngle+90, theta2=shutAngle+180)
-                axs.add_patch(e)
+                    dists = [ euclidDist(hingePos, p) for p in obj["points"] ]
+                    min_d = min(dists)
+                    pivotPointI = [i for i,d in enumerate(dists) if d == min_d][0]
+
+                    stepDirc = [1,-1][hi]
+                    nI = (pivotPointI+stepDirc) % len(obj["points"])
+                    nx,nz = obj["points"][nI]
+                    hx, hz = hingePos
+                    shutAngle = atan2(nx-hx,nz-hz) * 180 / pi
+                    shutAngle += 90 # GE-Pyplot 'North' disagreement
+
+                    circ = 2*dists[nI]
+
+                    t1, t2 = [
+                        (shutAngle, shutAngle + 90),
+                        (shutAngle - 90, shutAngle),
+                    ][hi]
+                    e = patches.Arc((-hx,hz), circ, circ, linewidth=0.5, angle=0.0, theta1=t1, theta2=t2)
+                    axs.add_patch(e)
 
 
 

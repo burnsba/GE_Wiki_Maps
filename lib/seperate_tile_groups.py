@@ -59,4 +59,4 @@ def seperateGroups(tiles, startTileName, dividingTiles):
 
 
     assert len(currGroup) == 0
-    return groups
+    return [g for g in groups if len(g) > 1]   # ditch all that are 1 tile: useful for archives.

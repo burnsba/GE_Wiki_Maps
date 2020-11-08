@@ -169,11 +169,17 @@ if PRINT_OBJECTS then
             
             if type == "door" then
                 local doorType = DoorData:get_value(odr.current_address, "hinge_type")  -- 4 is roller door?
-                local hingePos = doorDataGetHinge(odr.current_address)  -- types 5 and 9 only atm
+                local hingePositions = doorDataGetHinges(odr.current_address)
                 file:write("  \"door_type\" : " .. doorType .. ",", "\n")
-                if hingePos ~= nil then
-                    file:write("  \"hinge\" : (" .. hingePos.x .. ", " .. hingePos.z .. "),", "\n")
+                file:write("  \"hinges\" : [")
+                if table.getn(hingePositions) > 0 then
+                    file:write("\n")
                 end
+                for _, hingePos in ipairs(hingePositions) do
+                    file:write("    (" .. hingePos.x .. ", " .. hingePos.z .. "),", "\n")
+                end
+                file:write("  ],", "\n")
+
             end
 
             file:write("  \"type\" : \"" .. type .. "\",", "\n")
