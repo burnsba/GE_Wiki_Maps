@@ -121,7 +121,7 @@ def drawObjects(plt, axs, objects, tiles, currentTiles):
                 pass #print("Door with extreme clearance ignored")
             if len(obj.get("hinges", [])) > 0 and not obj["extreme_clearance"]:
                 assert len(obj["hinges"]) <= 2
-                openBackward = (obj["flags_1"] >> 29) & 0x1 == 1
+                openBackward = ((obj["flags_1"] >> 29) & 0x1) == 1
 
                 for hi, hingePos in enumerate(obj["hinges"]):
                     # We find the closest point to the hinge,
@@ -134,10 +134,18 @@ def drawObjects(plt, axs, objects, tiles, currentTiles):
 
                     dists = [ euclidDist(hingePos, p) for p in obj["points"] ]
                     min_d = min(dists)
+                    assert max(dists) > 5
                     pivotPointI = [i for i,d in enumerate(dists) if d == min_d][0]
 
+                    # Walk around in the relevant direction, but keep going until we find a point atleast 5cm away
+                    # (doors' points are weird, there are often more than 4)
                     stepDirc = [1,-1][hi]
-                    nI = (pivotPointI+stepDirc) % len(obj["points"])
+                    nI = pivotPointI
+                    while True:
+                        nI = (nI + stepDirc) % len(obj["points"])
+                        if dists[nI] > 5:
+                            break
+
                     nx,nz = obj["points"][nI]
                     hx, hz = hingePos
                     shutAngle = atan2(nx-hx,nz-hz) * 180 / pi
