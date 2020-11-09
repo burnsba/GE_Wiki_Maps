@@ -17,7 +17,7 @@ from math import sqrt
 # Archives SPECIFIC
 
 from level_specific.archives.details import dividingTiles, startTileName, excludeDoorReachPresets
-from data.archives import tiles, guards, objects, pads, level_scale, sets, presets, activatable_objects
+from data.archives import tiles, guards, objects, pads, level_scale, sets, presets, activatable_objects, opaque_objects
 
 
 # --------------------------------------------------------
@@ -125,7 +125,7 @@ def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_N
 
     # Archives specific testing
     # Ignore the stairs since they overlap
-    drawFOV(0x00, [0x34, 0x3A, 0x39,], tiles, guards, plt, ignoreTileAddrs = [0x1AD70C])
+    drawFOV(0x00, [0x34, 0x3A, 0x39,], tiles, guards, objects, opaque_objects, plt, ignoreTileAddrs = [0x1AD70C])
 
     # Save
     saveFig(plt,fig,os.path.join('output', path))

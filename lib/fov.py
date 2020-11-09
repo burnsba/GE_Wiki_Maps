@@ -7,6 +7,7 @@ from extremitypathfinder import PolygonEnvironment
 from extremitypathfinder.helper_classes import Vertex
 from extremitypathfinder.helper_fcts import find_visible
 from math import atan2
+import numpy as np
 
 def walkClippingBoundary(addr, i, envTileAddrs, tiles, remExtEdges):
     """
@@ -50,7 +51,7 @@ def walkClippingBoundary(addr, i, envTileAddrs, tiles, remExtEdges):
     
     return pnts
 
-def drawFOV(guardId, rooms, tiles, guards, plt, ignoreTileAddrs = None):
+def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreTileAddrs = None):
     """
     [!] The rooms you give must be simply linked i.e. project flat. i.e. only 1 floor
     Otherwise this will likely enter an infinite loop looking for the boundary
@@ -105,16 +106,26 @@ def drawFOV(guardId, rooms, tiles, guards, plt, ignoreTileAddrs = None):
         holes.append(hole)    # CWS
 
     # 4. Get objs
+    for room in rooms:
+        for objAddr in opaque_objects[room]:
+            pnts = objects[objAddr]["points"]
+            if objects[objAddr]["type"] == "door":
+                continue
 
+            dists = [np.linalg.norm(np.subtract(p,q)) for p,q in zip(pnts, pnts[1:] + pnts[:1])]
+            pnts = [p for p,d in zip(pnts, dists) if d > 0.05]
+            if len(pnts) <= 2:  # glass
+                continue
+
+            holes.append(pnts[::-1])
 
     # 5. Use library, digging a little into the internals to add the current path
     environment = PolygonEnvironment()
     environment.store(outerBoundary[::-1], holes, validate=True)  # probably don't validate O:) - objects may leak over
     environment.prepare()
     guardPos = [g["position"] for g in guards.values() if g["id"] == guardId][0]
-
     
-    # Testing
+    # Poking internals working okay..
     assert environment.within_map(guardPos)
     guardVertex = Vertex(guardPos)
     environment.translate(new_origin=guardVertex)
@@ -125,11 +136,19 @@ def drawFOV(guardId, rooms, tiles, guards, plt, ignoreTileAddrs = None):
     ]
 
 
-    # Debug
-    ##targetPos = [g["position"] for g in guards.values() if g["id"] == 0x11][0]
-    ##path, _ = environment.find_shortest_path(guardPos, targetPos)
+    # 6. Extend these points as far as possible.
+    # Arrange visibles in a (A?)CWS order
+    # Probably use more than just the coordinates - see if it's brushing the corner or going into it.
+    # Lack of another point between them says they land on the same edge - save some processing
+    # May even be able to infer if we're brushing past?
+    # But ultimately we are doing Rare code - generalise that code which we walked down the frig stairs with,
+    #   then test for intersection with each object.
+    # May need to reach back to get the tiles from the points
 
-    # 6. Arrange visibles in a (A?)CWS order, draw.
-    visibles.sort(key = lambda x : atan2(x[0],x[1]))
-    xs, zs = zip(*visibles)
-    plt.plot([-x for x in xs], zs, linewidth=0.5, color='r')
+    # Also for final drawing restrict it to the room which Nat aint in (pass as param, can generalise to tiles if needed later).
+
+    visibles.sort(key = lambda v : atan2(*np.subtract(v, guardPos)))
+    
+    for v in visibles:
+        xs, zs = zip(guardPos, v)
+        plt.plot([-x for x in xs], zs, linewidth=0.5, color='r')

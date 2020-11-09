@@ -223,7 +223,7 @@ if PRINT_OBJECTS then
         end
         file:write("],", "\n")
     end
-    file:write("},", "\n")
+    file:write("}", "\n")
 end
 
 if PRINT_GUARDS then
