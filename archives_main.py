@@ -133,7 +133,9 @@ def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_N
 
 if __name__ == "__main__":
     main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 0, 'archives_upstairs')
-    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 1, 'archives_downstairs')
-    ##main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 2, 'archives_attic')
-    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 3, 'archives_start')
-    ##[4] is the ending
+    debug = True
+    if not debug:
+        main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 1, 'archives_downstairs')
+        ##main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 2, 'archives_attic')
+        main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 3, 'archives_start')
+        ##[4] is the ending

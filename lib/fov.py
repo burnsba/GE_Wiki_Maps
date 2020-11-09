@@ -8,6 +8,11 @@ from extremitypathfinder.helper_classes import Vertex
 from extremitypathfinder.helper_fcts import find_visible
 from math import atan2
 import numpy as np
+from itertools import repeat, count
+
+def rotCWS(v):
+    x,z = v
+    return (z,-x)
 
 def walkClippingBoundary(addr, i, envTileAddrs, tiles, remExtEdges):
     """
@@ -43,13 +48,15 @@ def walkClippingBoundary(addr, i, envTileAddrs, tiles, remExtEdges):
     addr, j = boundary[-1]
     prev = tiles[addr]["points"][j]
     pnts = []
+    origins = []
     for addr, j in boundary:
         curr = tiles[addr]["points"][j]
         if curr != prev:
             pnts.append(curr)
+            origins.append((addr, j))
         prev = curr
     
-    return pnts
+    return pnts, origins
 
 def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreTileAddrs = None):
     """
@@ -84,28 +91,36 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
 
 
     # 3a/4a. Get all external edges.
+    # Prepare to get clipping context, which will map to (loop, index)
+    # Where loop == -1 means outerBoundary, otherwise holes[loop]
     remExtEdges = set([
         (addr, ((i+1) % len(tiles[addr]["links"])) - 1)
         for addr in envTileAddrs
         for i,l in enumerate(tiles[addr]["links"])
         if l == 0 or l not in envTileAddrs
     ])
+    clippingContext = dict()
+    objectContext = dict()
 
     # Now [i-1], [i] are these two points, and must be an external edge.
     # (note this is only external to the group we're looking at, but that's okay)
     # And this edge is ["links"][i-1]. And they go ACWS
     assert (addr, i-1) in remExtEdges
     
-    outerBoundary = walkClippingBoundary(addr, i-1, envTileAddrs, tiles, remExtEdges)
+    outerBoundary, outerOrigins = walkClippingBoundary(addr, i-1, envTileAddrs, tiles, remExtEdges)
+    clippingContext.update(dict(zip(outerBoundary, zip(repeat(-1), count(), outerOrigins))))
 
     # 3. Find all clipping holes. Untested.
+    # Also we'll pick up any extra
     holes = []
     while len(remExtEdges) > 0:
         addr, i = next(iter(remExtEdges))
-        hole = walkClippingBoundary(addr, i, envTileAddrs, tiles, remExtEdges)
+        hole, holeOrigins = walkClippingBoundary(addr, i, envTileAddrs, tiles, remExtEdges)
         holes.append(hole)    # CWS
+        clippingContext.update(dict(zip(hole, zip(repeat(len(holes)-1), count(), holeOrigins))))
 
     # 4. Get objs
+    cleanObjPnts = dict()
     for room in rooms:
         for objAddr in opaque_objects[room]:
             pnts = objects[objAddr]["points"]
@@ -117,13 +132,16 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
             if len(pnts) <= 2:  # glass
                 continue
 
+            cleanObjPnts[objAddr] = pnts
+            objectContext.update(dict(zip(pnts, zip(repeat(objAddr), count()))))
             holes.append(pnts[::-1])
 
     # 5. Use library, digging a little into the internals to add the current path
     environment = PolygonEnvironment()
     environment.store(outerBoundary[::-1], holes, validate=True)  # probably don't validate O:) - objects may leak over
     environment.prepare()
-    guardPos = [g["position"] for g in guards.values() if g["id"] == guardId][0]
+    ourGuard = [g for g in guards.values() if g["id"] == guardId][0]
+    guardPos = ourGuard["position"] 
     
     # Poking internals working okay..
     assert environment.within_map(guardPos)
@@ -149,6 +167,60 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
 
     visibles.sort(key = lambda v : atan2(*np.subtract(v, guardPos)))
     
-    for v in visibles:
-        xs, zs = zip(guardPos, v)
-        plt.plot([-x for x in xs], zs, linewidth=0.5, color='r')
+    for p in visibles:
+
+        # Get the next and previous points
+        # Note that the orientations are opposite for the outerBoundary
+        # .. though maybe not coz of the way we store them
+        assert (p in clippingContext) ^ (p in objectContext)
+        pnts = j = loopI = origins = None
+        isClipping = p in clippingContext
+        if isClipping:
+            loopI, j, (tileAddr, tilePntI) = clippingContext[p]
+            pnts = outerBoundary if loopI == -1 else holes[loopI]
+        else:
+            objAddr, j = objectContext[p]
+            pnts = cleanObjPnts[objAddr]
+
+        assert p == pnts[j]
+        a = pnts[j-1]
+        b = pnts[(j+1) % len(pnts)]
+
+        # Determine if we glance or crash into this vertex
+        # Get the 2 edges, both should be CWS around the shape, then turned in
+        v = rotCWS(np.subtract(a,p))
+        w = rotCWS(np.subtract(p,b))
+        ray = np.subtract(p, guardPos)
+        glances = not ((np.dot(v,ray) > 0) and (np.dot(w,ray) > 0))
+
+
+        if glances:
+
+            # Awkward case of glancing clipping corner
+            # If we started at the source, we touch the clipping so could wrongly stop
+            if isClipping:
+                # Rotate around the corner until our ray leaves through an edge (rather than a corner)
+                # We are pretty sure this just means rotating CWS,
+                #   because this is against the direction we set up the clipping
+                while True:
+                    assert tiles[tileAddr]["points"][tilePntI] == p
+                    q = tiles[tileAddr]["points"][tilePntI - 1]
+
+                    l = tiles[tileAddr]["links"][tilePntI - 1]
+                    v2 = rotCWS(np.subtract(q,p))   # p -> q, rotated
+                    if np.dot(v2, ray) < 0:
+                        break
+                    
+                    tilePntI = tiles[l]["links"].index(tileAddr)
+                    tileAddr = l
+            else:
+                # For an object, we can't easily establish a start tile,
+                #   so we just start at the source
+                tileAddr = ourGuard["tile"]
+                
+
+            print(hex(tiles[tileAddr]["name"]))
+
+        # Debug
+        xs, zs = zip(guardPos, p)
+        plt.plot([-x for x in xs], zs, linewidth=0.5, color=('g' if glances else 'r'))
