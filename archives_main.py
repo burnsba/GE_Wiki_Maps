@@ -4,6 +4,7 @@ from lib.object import drawObjects
 from lib.circle_related import colourSphereIntesectionWithTiles, drawDoorReachability
 from lib.stairs import markStairs
 from lib.path_finding import prepSets, getPathBetweenPads, drawPathWithinGroup
+from lib.fov import drawFOV
 import matplotlib.pyplot as plt
 import os
 from math import sqrt
@@ -121,6 +122,10 @@ def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_N
     drawCollectibles(objects, axs, currentTiles)
 
     drawActivatables(axs, activatable_objects, objects, currentTiles)
+
+    # Archives specific testing
+    # Ignore the stairs since they overlap
+    drawFOV(0x00, [0x34, 0x3A, 0x39,], tiles, guards, plt, ignoreTileAddrs = [0x1AD70C])
 
     # Save
     saveFig(plt,fig,os.path.join('output', path))

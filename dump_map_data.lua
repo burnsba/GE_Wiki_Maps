@@ -14,6 +14,8 @@ local PRINT_PADS = true
 local PRINT_SETS = true
 local PRINT_PRESETS = true
 
+PRINT_OBJECTS = PRINT_OBJECTS and PRINT_TILES   -- objects needs tiles to get all rooms
+
 local mission_name = GameData.get_mission_name(GameData.get_current_mission())
 local filename = ("data\\" .. mission_name .. ".py"):lower()
 console.log("Dumping to " .. filename)
@@ -27,8 +29,11 @@ local all_tiles = TileData.getAllTiles()
 
 file:write("level_scale = " .. scale .. "\n")
 
+allRooms = {}   -- read from tiles to be safe because they aren't always contigious
+
 if PRINT_TILES then
     file:write("tiles = {", "\n")
+    isRoom = {}
     for i, tile in ipairs(all_tiles) do
         file:write(("0x%06X"):format(tile) .. " : {", "\n")
         file:write("  \"points\" : [")
@@ -44,7 +49,9 @@ if PRINT_TILES then
         end
         file:write("  ],", "\n")
 
-        file:write("  \"room\" : " .. ("0x%04X"):format(TileData:get_value(tile, "room")) .. ",", "\n")
+        local room = TileData:get_value(tile, "room")
+        file:write("  \"room\" : " .. ("0x%04X"):format(room) .. ",", "\n")
+        isRoom[room] = true
         
         file:write("  \"links\" : [")
         local links = TileData.get_links(tile)
@@ -57,6 +64,10 @@ if PRINT_TILES then
         file:write("},", "\n")
     end
     file:write("}", "\n")
+
+    for room, _ in pairs(isRoom) do
+        table.insert(allRooms, room)
+    end
 end
 
 
@@ -196,6 +207,23 @@ if PRINT_OBJECTS then
         file:write(("  0x%06X"):format(objAddr) .. ",", "\n")
     end
     file:write("]", "\n")
+
+    -- opaque objects in each room (block LOS)
+    file:write("opaque_objects = {", "\n")
+    for _, room in ipairs(allRooms) do
+        file:write(("  0x%02X : ["):format(room))
+        posDatasInRoom = PositionData.getCollidablesInRooms({room,})[room]
+        for _, pd in ipairs(posDatasInRoom) do
+            local odp = PositionData:get_value(pd, "object_data_pointer") - 0x80000000
+
+            -- 0x11B in CMD 0x3C's data. Also ditch guards.
+            if PositionData:get_value(pd, "object_type") ~= 3 and PositionData.checkFlags(pd, 0x11B) then  
+                file:write(("0x%06X, "):format(odp))
+            end
+        end
+        file:write("],", "\n")
+    end
+    file:write("},", "\n")
 end
 
 if PRINT_GUARDS then
