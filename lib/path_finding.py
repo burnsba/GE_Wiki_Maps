@@ -103,12 +103,56 @@ def getPathBetweenPads(src_pad, dst_pad, sets, pads):
     ##print("pad path =", ", ".join(map(hex, padPath)))
     return padPath
 
+def rotACWS(v):
+    x,z = v
+    return (-z,x)
 
-def walkAcrossTiles(currTile, n, a, universeTiles, endTiles, tiles):
+def getLineSegmentIntersection(c,d,p,q,n=None,a=None,default=None,knownCollision=False):
+    # STRICT
+    # Used in trimming PQ, so if P=Q, return
+    if p == q:
+        return default
+
+    # Get half plane for PQ if we don't already
+    if n is None:
+        n = rotACWS(np.subtract(q,p))
+        n = np.multiply(n, 1 / np.linalg.norm(n))
+    if a is None:
+        a = np.dot(n,p)
+    
+    # Always get the half plane for AB
+    n2 = rotACWS(np.subtract(d,c))
+    n2 = np.multiply(n2, 1 / np.linalg.norm(n2))
+    a2 = np.dot(c, n2)
+
+    # If A,B same side of PQ, no collision
+    if not knownCollision:
+        dispA = np.dot(c, n) - a
+        dispB = np.dot(d, n) - a
+        if dispA * dispB >= 0:
+            return default
+
+    # Likewise if P,Q same side of AB
+    dispA = np.dot(p, n2) - a2
+    dispB = np.dot(q, n2) - a2
+    if not knownCollision and dispA * dispB >= 0:
+        return default
+    
+    # Compute intersection point
+    dispAB = dispB - dispA
+    alpha = (-dispA) / dispAB
+    beta = (dispB) / dispAB
+    intersectP = tuple(np.add(np.multiply(beta, p), np.multiply(alpha, q)))
+    return intersectP
+
+def walkAcrossTiles(currTile, n, a, universeTiles, endTiles, tiles, endPoint=None, visitedTiles=None):
     dispA = dispB = None
     index = None
     prevTile = None
     while currTile in universeTiles and currTile not in endTiles:
+        if visitedTiles is not None:
+            visitedTiles.append(currTile)
+
         currTile = tiles[currTile]
         dispA = np.dot(currTile["points"][-1], n)
         index = -1
@@ -122,6 +166,18 @@ def walkAcrossTiles(currTile, n, a, universeTiles, endTiles, tiles):
             dispA = dispB
 
         assert index != -1
+
+        # If desired, test the edge we're crossing against the limit point to see if we should stop
+        
+        if endPoint is not None:
+            pntA = currTile["points"][index - 1]
+            pntB = currTile["points"][index]
+            n2 = rotACWS(np.subtract(pntB, pntA))
+            a2 = np.dot(pntA, n2)
+            if np.dot(endPoint,n2) < a2:
+                # 2nd return will contain the endPoint
+                return currTile["links"][index - 1], currTile, None
+
         prevTile = currTile
         currTile = currTile["links"][index - 1]
 
@@ -131,7 +187,7 @@ def walkAcrossTiles(currTile, n, a, universeTiles, endTiles, tiles):
     beta = (dispB-a) / dispAB
     intersectP = np.add(np.multiply(beta, prevTile["points"][index-1]), np.multiply(alpha, prevTile["points"][index]))
 
-    return currTile, intersectP
+    return currTile, prevTile, intersectP
 
 
 def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, stdColour='b', padRadius=3):
@@ -199,7 +255,7 @@ def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, s
         assert currTile != targetTile   # we're exiting the current tile group, so this is impossible
 
 
-        currTile, intersectP = walkAcrossTiles(currTile, n, a, currentTiles, [targetTile, 0], tiles)
+        currTile, prevTile, intersectP = walkAcrossTiles(currTile, n, a, currentTiles, [targetTile, 0], tiles)
 
         
         if currTile != 0:

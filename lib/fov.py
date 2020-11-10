@@ -9,10 +9,15 @@ from extremitypathfinder.helper_fcts import find_visible
 from math import atan2
 import numpy as np
 from itertools import repeat, count
+from .path_finding import walkAcrossTiles, getLineSegmentIntersection
 
 def rotCWS(v):
     x,z = v
     return (z,-x)
+
+def rotACWS(v):
+    x,z = v
+    return (-z,x)
 
 def walkClippingBoundary(addr, i, envTileAddrs, tiles, remExtEdges):
     """
@@ -62,7 +67,14 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
     """
     [!] The rooms you give must be simply linked i.e. project flat. i.e. only 1 floor
     Otherwise this will likely enter an infinite loop looking for the boundary
+    Nothing is drawn inside the guard's current room
+    NOTE: If a ray glances off an object and out of our room it will currently cause us big problems
     """
+    
+    # Get our 'guard'.
+    ourGuard = [g for g in guards.values() if g["id"] == guardId][0]
+    guardPos = ourGuard["position"] 
+    guardRoom = tiles[ourGuard["tile"]]["room"]
     
     # 0. Ignore tiles used to ensure our boundary polygon doesn't overlap at all
     ignoreTileAddrs = set() if ignoreTileAddrs is None else set(ignoreTileAddrs)
@@ -140,8 +152,6 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
     environment = PolygonEnvironment()
     environment.store(outerBoundary[::-1], holes, validate=True)  # probably don't validate O:) - objects may leak over
     environment.prepare()
-    ourGuard = [g for g in guards.values() if g["id"] == guardId][0]
-    guardPos = ourGuard["position"] 
     
     # Poking internals working okay..
     assert environment.within_map(guardPos)
@@ -166,7 +176,10 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
     # Also for final drawing restrict it to the room which Nat aint in (pass as param, can generalise to tiles if needed later).
 
     visibles.sort(key = lambda v : atan2(*np.subtract(v, guardPos)))
-    
+    inside = True
+    borderData = None
+    currPoly = None
+
     for p in visibles:
 
         # Get the next and previous points
@@ -193,11 +206,21 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
         ray = np.subtract(p, guardPos)
         glances = not ((np.dot(v,ray) > 0) and (np.dot(w,ray) > 0))
 
+        n = rotACWS(ray)
+        n = np.multiply(n, 1 / np.linalg.norm(n))
+        a = np.dot(n, guardPos)
 
-        if glances:
-
+        if not glances:
+            q = p
+            if isClipping:
+                lastTile = tiles[tileAddr]
+            else:
+                _, lastTile, _ = walkAcrossTiles(ourGuard["tile"], n, a, envTileAddrs, [0], tiles, endPoint=p)
+        else:
             # Awkward case of glancing clipping corner
             # If we started at the source, we touch the clipping so could wrongly stop
+            # We still need to fetch all the tiles to this point.
+            visitedTiles = []
             if isClipping:
                 # Rotate around the corner until our ray leaves through an edge (rather than a corner)
                 # We are pretty sure this just means rotating CWS,
@@ -213,14 +236,61 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
                     
                     tilePntI = tiles[l]["links"].index(tileAddr)
                     tileAddr = l
+
+                _ = walkAcrossTiles(ourGuard["tile"], n, a, envTileAddrs, [0], tiles, endPoint=p, visitedTiles=visitedTiles)
             else:
                 # For an object, we can't easily establish a start tile,
                 #   so we just start at the source
                 tileAddr = ourGuard["tile"]
                 
 
-            print(hex(tiles[tileAddr]["name"]))
+            # Get the far clipping collision, and complete the list of tiles
+            # There may be a duplicate but this isn't an issue.
+            _, lastTile, q = walkAcrossTiles(tileAddr, n, a, envTileAddrs, [0], tiles, visitedTiles=visitedTiles)
+            p,q = map(tuple, (p,q))
+            lastInGuardRoom = len(visitedTiles) - 1 - [tiles[a]["room"] for a in visitedTiles[::-1]].index(guardRoom)
+            if not isClipping:
+                print(inside, hex(lastTile["name"]))
 
-        # Debug
-        xs, zs = zip(guardPos, p)
-        plt.plot([-x for x in xs], zs, linewidth=0.5, color=('g' if glances else 'r'))
+            # Search for collisions with objects and clipping holes
+            # This is proper line Segment intersection
+            for pnts in holes:
+                prevPnt = pnts[-1]
+                for i,pnt in enumerate(pnts):
+                    q = getLineSegmentIntersection(prevPnt, pnt, p, q, n, a, q)
+                    prevPnt = pnt
+                
+
+        if lastTile["room"] != guardRoom:
+            borderData = (visitedTiles[lastInGuardRoom:lastInGuardRoom+2], n, a, p, q)
+            if inside:
+                # Exiting
+                currPoly = [borderData, []]
+            inside = False
+
+            currPoly[1].append(q)
+
+        else:
+            if not inside:
+                # Entering
+                currPoly.append(borderData)
+                
+                # currPoly = (entryData, points, leaveData)
+                # Find the points where we enter and leave
+                borderPnts = []
+                for (insideTile, outsideTile), n, a, p, q in currPoly[0:3:2]:
+                    # Tiles may only share a point if we had to walk around, in which case the point is p
+                    if outsideTile in tiles[insideTile]["links"]:
+                        i = tiles[insideTile]["links"].index(outsideTile)
+                        d = tiles[insideTile]["points"][i]
+                        c = tiles[insideTile]["points"][i-1]
+                        borderPnts.append( getLineSegmentIntersection(c,d,p,q,n,a,None,True) )
+                    else:
+                        borderPnts.append(p)
+
+                polyPnts = borderPnts[:1] + currPoly[1] + borderPnts[1:]
+                xs, zs = zip(*polyPnts)
+                xs = [-x for x in xs]
+                plt.plot(xs, zs, linewidth=1, color='r')
+
+            inside = True
