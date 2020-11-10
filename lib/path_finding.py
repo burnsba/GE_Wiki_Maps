@@ -125,7 +125,13 @@ def walkAcrossTiles(currTile, n, a, universeTiles, endTiles, tiles):
         prevTile = currTile
         currTile = currTile["links"][index - 1]
 
-    return currTile, prevTile, index, dispA, dispB
+    # Compute the intersection point using the weights
+    dispAB = dispB - dispA
+    alpha = (a-dispA) / dispAB
+    beta = (dispB-a) / dispAB
+    intersectP = np.add(np.multiply(beta, prevTile["points"][index-1]), np.multiply(alpha, prevTile["points"][index]))
+
+    return currTile, intersectP
 
 
 def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, stdColour='b', padRadius=3):
@@ -193,15 +199,10 @@ def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, s
         assert currTile != targetTile   # we're exiting the current tile group, so this is impossible
 
 
-        currTile, prevTile, index, dispA, dispB = walkAcrossTiles(currTile, n, a, currentTiles, [targetTile, 0], tiles)
+        currTile, intersectP = walkAcrossTiles(currTile, n, a, currentTiles, [targetTile, 0], tiles)
 
         
         if currTile != 0:
-            # Compute the intersection point using the weights
-            dispAB = dispB - dispA
-            alpha = (a-dispA) / dispAB
-            beta = (dispB-a) / dispAB
-            intersectP = np.add(np.multiply(beta, prevTile["points"][index-1]), np.multiply(alpha, prevTile["points"][index]))
             xs = [-pd["position"][0], -intersectP[0]]
             zs = [pd["position"][2], intersectP[1]]
             plt.plot(xs, zs, linewidth=0.5, color=stdColour)
