@@ -63,13 +63,15 @@ def walkClippingBoundary(addr, i, envTileAddrs, tiles, remExtEdges):
     
     return pnts, origins
 
-def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreTileAddrs = None):
+def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreTileAddrs = None, objTransforms = None):
     """
     [!] The rooms you give must be simply linked i.e. project flat. i.e. only 1 floor
     Otherwise this will likely enter an infinite loop looking for the boundary
     Nothing is drawn inside the guard's current room
     NOTE: If a ray glances off an object and out of our room it will currently cause us big problems
     """
+    if objTransforms is None:
+        objTransforms = dict()
     
     # Get our 'guard'.
     ourGuard = [g for g in guards.values() if g["id"] == guardId][0]
@@ -136,13 +138,18 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
     for room in rooms:
         for objAddr in opaque_objects[room]:
             pnts = objects[objAddr]["points"]
-            if objects[objAddr]["type"] == "door":
+
+            # Skip doors unless we're transforming them
+            if objects[objAddr]["type"] == "door" and objAddr not in objTransforms:
                 continue
 
             dists = [np.linalg.norm(np.subtract(p,q)) for p,q in zip(pnts, pnts[1:] + pnts[:1])]
             pnts = [p for p,d in zip(pnts, dists) if d > 0.05]
             if len(pnts) <= 2:  # glass
                 continue
+
+            if objAddr in objTransforms:
+                pnts = [tuple(objTransforms[objAddr](p)) for p in pnts]
 
             cleanObjPnts[objAddr] = pnts
             objectContext.update(dict(zip(pnts, zip(repeat(objAddr), count()))))
@@ -179,6 +186,7 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
     inside = True
     borderData = None
     currPoly = None
+    far = False
 
     for p in visibles:
 
@@ -249,8 +257,6 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
             _, lastTile, q = walkAcrossTiles(tileAddr, n, a, envTileAddrs, [0], tiles, visitedTiles=visitedTiles)
             p,q = map(tuple, (p,q))
             lastInGuardRoom = len(visitedTiles) - 1 - [tiles[a]["room"] for a in visitedTiles[::-1]].index(guardRoom)
-            if not isClipping:
-                print(inside, hex(lastTile["name"]))
 
             # Search for collisions with objects and clipping holes
             # This is proper line Segment intersection
@@ -268,7 +274,16 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
                 currPoly = [borderData, []]
             inside = False
 
-            currPoly[1].append(q)
+            if glances and far:
+                currPoly[1].append(q)
+            
+            currPoly[1].append(p)
+            
+            if glances and not far:
+                currPoly[1].append(q)
+            
+            if glances:
+                far = not far
 
         else:
             if not inside:
@@ -282,15 +297,16 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
                     # Tiles may only share a point if we had to walk around, in which case the point is p
                     if outsideTile in tiles[insideTile]["links"]:
                         i = tiles[insideTile]["links"].index(outsideTile)
-                        d = tiles[insideTile]["points"][i]
-                        c = tiles[insideTile]["points"][i-1]
+                        d = tiles[insideTile]["points"][i+1]
+                        c = tiles[insideTile]["points"][i]
                         borderPnts.append( getLineSegmentIntersection(c,d,p,q,n,a,None,True) )
                     else:
                         borderPnts.append(p)
 
-                polyPnts = borderPnts[:1] + currPoly[1] + borderPnts[1:]
+                # Drop first and last point in favour of these border points. Wrap.
+                polyPnts = borderPnts[:1] + currPoly[1][1:-1] + borderPnts[1:] + borderPnts[:1]
                 xs, zs = zip(*polyPnts)
                 xs = [-x for x in xs]
-                plt.plot(xs, zs, linewidth=1, color='r')
+                plt.fill(xs, zs, linewidth=1, fc='r', alpha=0.2)
 
             inside = True

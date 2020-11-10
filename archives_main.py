@@ -8,6 +8,7 @@ from lib.fov import drawFOV
 import matplotlib.pyplot as plt
 import os
 from math import sqrt
+import numpy as np
 
 # Currently we're going to have a seperate py file for each level
 # Seems sensible since it may want to heavily customised what's drawn,
@@ -125,7 +126,16 @@ def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_N
 
     # Archives specific testing
     # Ignore the stairs since they overlap
-    drawFOV(0x00, [0x34, 0x3A, 0x39,], tiles, guards, objects, opaque_objects, plt, ignoreTileAddrs = [0x1AD70C])
+    doorAddr = 0x1D36C8
+    def openNatDoor(pnt):
+        hinge = objects[doorAddr]["hinges"][0]
+        x,z = np.subtract(pnt, hinge)
+        pnt = np.add((z,-x), hinge)
+        return pnt
+
+    # Object on the boundary isn't really supported, but better to be more accurate
+    drawFOV(0x00, [0x34, 0x3A, 0x39,], tiles, guards, objects, opaque_objects, plt,
+        ignoreTileAddrs = [0x1AD70C], objTransforms = {doorAddr:openNatDoor})
 
     # Save
     saveFig(plt,fig,os.path.join('output', path))
