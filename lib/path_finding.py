@@ -103,6 +103,31 @@ def getPathBetweenPads(src_pad, dst_pad, sets, pads):
     ##print("pad path =", ", ".join(map(hex, padPath)))
     return padPath
 
+
+def walkAcrossTiles(currTile, n, a, universeTiles, endTiles, tiles):
+    dispA = dispB = None
+    index = None
+    prevTile = None
+    while currTile in universeTiles and currTile not in endTiles:
+        currTile = tiles[currTile]
+        dispA = np.dot(currTile["points"][-1], n)
+        index = -1
+
+        # Correct sign change in dot products indicates an edge we're leaving over.
+        for i,pnt in enumerate(currTile["points"]):
+            dispB = np.dot(pnt,n)
+            if dispA > a and dispB <= a:
+                index = i
+                break
+            dispA = dispB
+
+        assert index != -1
+        prevTile = currTile
+        currTile = currTile["links"][index - 1]
+
+    return currTile, prevTile, index, dispA, dispB
+
+
 def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, stdColour='b', padRadius=3):
     # If guard is not None, use their starting point. Should be data.
     # Should cope with paths entering and leaving the group many times, though it's untested
@@ -167,25 +192,8 @@ def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, s
         targetTile = qd["tile"]
         assert currTile != targetTile   # we're exiting the current tile group, so this is impossible
 
-        dispA = dispB = None
-        index = None
-        prevTile = None
-        while currTile in currentTiles and currTile not in [targetTile, 0]:
-            currTile = tiles[currTile]
-            dispA = np.dot(currTile["points"][-1], n)
-            index = -1
 
-            # Correct sign change in dot products indicates an edge we're leaving over.
-            for i,pnt in enumerate(currTile["points"]):
-                dispB = np.dot(pnt,n)
-                if dispA > a and dispB <= a:
-                    index = i
-                    break
-                dispA = dispB
-
-            assert index != -1
-            prevTile = currTile
-            currTile = currTile["links"][index - 1]
+        currTile, prevTile, index, dispA, dispB = walkAcrossTiles(currTile, n, a, currentTiles, [targetTile, 0], tiles)
 
         
         if currTile != 0:
