@@ -28,7 +28,8 @@ def drawGuards(guards, currentTiles, axs):
         if gd["tile"] not in currentTiles:
             continue
         x,z = gd["position"]
-        axs.add_artist(plt.Circle((-x, z), gd["radius"], color='g', linewidth=1, fill=False))
+        nadeOdds = gd["grenade_odds"]
+        axs.add_artist(plt.Circle((-x, z), gd["radius"], color=('g' if nadeOdds == 0 else 'r'), linewidth=1, fill=False))
 
 def drawCollectibles(objects, axs, currentTiles):
     # Also currently very simple, though we may add more detail to each type,

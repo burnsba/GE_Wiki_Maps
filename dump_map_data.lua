@@ -235,12 +235,15 @@ if PRINT_GUARDS then
         local near_pad = PositionData.getNearPad(pdp)
         local cr = gdr:get_value("collision_radius")
         local id = gdr:get_value("id")
+        local grenadeOdds = gdr:get_value("belligerency")
         file:write(("0x%06X"):format(gdr.current_address) .. " : {", "\n")
-        file:write("  \"position\" : (" .. pos.x .. ", " .. pos.z .. "),", "\n") -- ignore y
+        file:write("  \"position\" : (" .. pos.x .. ", " .. pos.z .. "),", "\n") -- historically no y, so added seperately as height
+        file:write("  \"height\" : " .. pos.y .. ",", "\n")
         file:write("  \"tile\" : " .. ("0x%06X"):format(tile) .. ",", "\n")
         file:write("  \"near_pad\" : " .. ("0x%04X"):format(near_pad) .. ",", "\n")
         file:write("  \"radius\" : " .. cr .. ",", "\n")
         file:write(("  \"id\" : 0x%04X,"):format(id), "\n")
+        file:write("  \"grenade_odds\" : " .. grenadeOdds .. ",", "\n")
         file:write("},", "\n")
     end)
 

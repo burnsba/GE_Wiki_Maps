@@ -20797,6 +20797,82 @@ activatable_objects = [
   0x1C9794,
   0x1C82BC,
 ]
+opaque_objects = {
+  0x01 : [],
+  0x02 : [0x1C700C, 0x1C710C, ],
+  0x03 : [0x1C720C, 0x1C9084, 0x1CA034, 0x1CA13C, 0x1CA244, 0x1CA34C, 0x1CA450, 0x1CA554, ],
+  0x04 : [0x1C7C0C, 0x1CB7C0, 0x1CB840, 0x1CB8C0, 0x1CC6D0, 0x1CCAD0, 0x1CCB50, 0x1CCBD0, 0x1CCC50, 0x1CCCD0, 0x1CCD50, 0x1CCDD0, ],
+  0x05 : [0x1C7C0C, 0x1CA658, 0x1CA760, 0x1CA868, 0x1CA970, 0x1CFD78, ],
+  0x06 : [0x1C7A0C, 0x1C7B0C, 0x1CB5B4, 0x1CB6BC, ],
+  0x07 : [0x1C780C, 0x1C790C, ],
+  0x08 : [0x1C6E0C, 0x1C6F0C, 0x1C8F84, 0x1CA658, 0x1CA970, 0x1CB1A0, 0x1CB2A8, 0x1CB3AC, ],
+  0x09 : [0x1C6D0C, 0x1C6E0C, ],
+  0x0A : [0x1C6F0C, ],
+  0x0B : [0x1C740C, 0x1C750C, 0x1C760C, 0x1C770C, 0x1CB4B0, ],
+  0x0C : [0x1C640C, 0x1C650C, 0x1C660C, 0x1C670C, 0x1C680C, 0x1C690C, 0x1C6A0C, 0x1C6B0C, 0x1C6C0C, 0x1C6D0C, ],
+  0x0D : [],
+  0x0F : [],
+  0x12 : [0x1C9084, ],
+  0x13 : [0x1C7F64, 0x1CF4D8, 0x1CF56C, ],
+  0x14 : [0x1C8064, 0x1C8F84, 0x1CC350, 0x1CC4D0, 0x1CF4D8, ],
+  0x15 : [0x1C7F64, 0x1C9184, 0x1CF56C, ],
+  0x16 : [0x1CEA60, 0x1CEAE0, 0x1CEB60, 0x1CEBE0, 0x1CEC60, 0x1CECE0, 0x1CED60, 0x1CEDE0, 0x1CEE60, 0x1CEEE0, 0x1CEF60, 0x1CEFE0, 0x1CF060, 0x1CF0E0, ],
+  0x17 : [0x1C9484, 0x1C9584, ],
+  0x18 : [0x1C9184, 0x1CF600, 0x1CF8E4, ],
+  0x19 : [0x1C9284, 0x1CF694, ],
+  0x1A : [0x1C9384, 0x1CF850, ],
+  0x1B : [0x1C9484, 0x1CF728, 0x1CF7BC, ],
+  0x1C : [0x1CDF10, 0x1CF8E4, ],
+  0x1D : [0x1C9284, ],
+  0x1E : [0x1CF850, ],
+  0x1F : [0x1CDB80, 0x1CDC80, 0x1CDD00, 0x1CDD90, 0x1CDE90, 0x1CF7BC, ],
+  0x20 : [0x1CD760, 0x1CD860, 0x1CD8E0, 0x1CF600, 0x1D04A0, ],
+  0x21 : [0x1CF694, ],
+  0x22 : [0x1C9384, 0x1CD970, 0x1CDA70, 0x1CDAF0, ],
+  0x23 : [0x1CF728, ],
+  0x24 : [0x1C9584, 0x1C9684, ],
+  0x25 : [],
+  0x26 : [],
+  0x27 : [0x1C8524, 0x1CF978, 0x1CFB34, ],
+  0x28 : [0x1C82BC, 0x1C8624, 0x1C9684, 0x1CC3D0, 0x1CC450, 0x1CC550, 0x1CC5D0, 0x1CF978, 0x1CFA0C, 0x1CFCF0, ],
+  0x29 : [],
+  0x2A : [],
+  0x2B : [0x1C81BC, 0x1C8754, 0x1C8864, 0x1CFA0C, 0x1CFAA0, ],
+  0x2C : [0x1C83EC, 0x1C8974, 0x1C8A84, 0x1CDF90, 0x1CE010, 0x1CE0A0, 0x1CE1A0, 0x1CE750, 0x1CE850, 0x1CE8D0, 0x1CE960, ],
+  0x2D : [0x1CB950, 0x1CBB00, 0x1CBDD0, 0x1CDF90, 0x1CE010, 0x1CE0A0, 0x1CE1A0, ],
+  0x2E : [0x1CBA70, 0x1CBC20, 0x1CBCB0, 0x1CE4B0, 0x1CE540, 0x1CE640, 0x1CE6C0, ],
+  0x2F : [0x1CB9E0, 0x1CBB90, 0x1CBD40, 0x1CE220, 0x1CE2A0, 0x1CE330, 0x1CE430, ],
+  0x30 : [0x1C81BC, 0x1C83EC, 0x1C8754, 0x1C8864, 0x1C8974, 0x1C8A84, 0x1CFAA0, ],
+  0x31 : [0x1C8524, 0x1CAA74, 0x1CAB7C, 0x1CAC84, 0x1CAD8C, 0x1CAE90, 0x1CAF94, 0x1CB098, 0x1CFB34, ],
+  0x32 : [],
+  0x33 : [],
+  0x34 : [],
+  0x35 : [0x1C8B84, 0x1CC2D0, 0x1CD1D0, 0x1CD250, 0x1CD2D0, 0x1CF444, ],
+  0x36 : [0x1C8B84, 0x1CF3B0, 0x1CF444, ],
+  0x37 : [0x1C8C84, 0x1CF288, 0x1CF31C, 0x1CF3B0, ],
+  0x38 : [0x1C8C84, 0x1CC050, 0x1CC0D0, 0x1CD350, 0x1CD3D0, 0x1CD450, 0x1CD4D0, 0x1CF288, 0x1CF31C, ],
+  0x39 : [0x1C8D84, 0x1CBE50, 0x1CC150, 0x1CC1D0, 0x1CC250, 0x1CCE50, 0x1CCED0, 0x1CCF50, 0x1CCFD0, 0x1CD050, 0x1CD0D0, 0x1CD150, 0x1CF1F4, 0x1CF3B0, ],
+  0x3A : [0x1C8D84, 0x1CF1F4, 0x1CF288, 0x1CF3B0, ],
+  0x3B : [],
+  0x3C : [],
+  0x3D : [0x1C8E84, 0x1C9794, 0x1CF160, ],
+  0x3E : [0x1C8E84, 0x1CBED0, 0x1CBF50, 0x1CBFD0, 0x1CF160, 0x1CFBC8, 0x1CFC5C, ],
+  0x3F : [0x1C9994, ],
+  0x40 : [],
+  0x49 : [0x1C760C, 0x1C770C, ],
+  0x4D : [0x1C700C, 0x1C710C, 0x1C730C, ],
+  0x42 : [0x1C7D0C, 0x1C7E0C, 0x1C9894, 0x1C9E04, 0x1C9E94, 0x1C9F24, 0x1C9FB4, ],
+  0x46 : [],
+  0x4A : [0x1CD550, 0x1CD5D0, 0x1CD650, 0x1CD6D0, ],
+  0x43 : [0x1C9CE4, 0x1C9D74, 0x1C9E04, 0x1C9E94, ],
+  0x47 : [0x1C740C, 0x1C750C, 0x1C780C, 0x1C790C, 0x1C7A0C, 0x1C7B0C, ],
+  0x4B : [],
+  0x44 : [0x1C9794, 0x1C9994, 0x1C9AA4, 0x1C9B34, 0x1C9BC4, 0x1C9C54, 0x1C9CE4, 0x1C9D74, 0x1CFBC8, 0x1CFC5C, ],
+  0x48 : [0x1C720C, 0x1C730C, 0x1CC650, 0x1CC750, 0x1CC7D0, 0x1CC850, 0x1CC8D0, 0x1CC950, 0x1CC9D0, 0x1CCA50, ],
+  0x4C : [],
+  0x41 : [0x1C9894, ],
+  0x45 : [0x1C7D0C, 0x1C7E0C, ],
+}
 
 guards = {
 0x1D9270 : {
@@ -20805,6 +20881,7 @@ guards = {
   "near_pad" : 0x000A,
   "radius" : 20,
   "id" : 0x0000,
+  "grenade_odds" : 7,
 },
 0x1D944C : {
   "position" : (-489.8547668457, 416.08645629883),
@@ -20812,6 +20889,7 @@ guards = {
   "near_pad" : 0x0009,
   "radius" : 20,
   "id" : 0x0001,
+  "grenade_odds" : 0,
 },
 0x1D9628 : {
   "position" : (-614.18341064453, 399.50930786133),
@@ -20819,6 +20897,7 @@ guards = {
   "near_pad" : 0x0009,
   "radius" : 20,
   "id" : 0x0002,
+  "grenade_odds" : 0,
 },
 0x1D9804 : {
   "position" : (-541.24395751953, 131.78834533691),
@@ -20826,6 +20905,7 @@ guards = {
   "near_pad" : 0x0009,
   "radius" : 20,
   "id" : 0x0003,
+  "grenade_odds" : 0,
 },
 0x1D99E0 : {
   "position" : (-518.86480712891, 1046.0181884766),
@@ -20833,6 +20913,7 @@ guards = {
   "near_pad" : 0x0013,
   "radius" : 20,
   "id" : 0x0004,
+  "grenade_odds" : 7,
 },
 0x1D9BBC : {
   "position" : (891.85064697266, 454.21389770508),
@@ -20840,6 +20921,7 @@ guards = {
   "near_pad" : 0x001A,
   "radius" : 20,
   "id" : 0x0005,
+  "grenade_odds" : 0,
 },
 0x1D9D98 : {
   "position" : (1012.8638305664, 363.03958129883),
@@ -20847,6 +20929,7 @@ guards = {
   "near_pad" : 0x001A,
   "radius" : 20,
   "id" : 0x0006,
+  "grenade_odds" : 0,
 },
 0x1D9F74 : {
   "position" : (692.09600830078, 151.68092346191),
@@ -20854,6 +20937,7 @@ guards = {
   "near_pad" : 0x001A,
   "radius" : 20,
   "id" : 0x0007,
+  "grenade_odds" : 0,
 },
 0x1DA150 : {
   "position" : (5277.3354492188, 680.49200439453),
@@ -20861,6 +20945,7 @@ guards = {
   "near_pad" : 0x0041,
   "radius" : 20,
   "id" : 0x0008,
+  "grenade_odds" : 0,
 },
 0x1DA32C : {
   "position" : (6281.9106445313, 778.29718017578),
@@ -20868,6 +20953,7 @@ guards = {
   "near_pad" : 0x0041,
   "radius" : 20,
   "id" : 0x0009,
+  "grenade_odds" : 7,
 },
 0x1DA508 : {
   "position" : (5879.0859375, 525.49566650391),
@@ -20875,6 +20961,7 @@ guards = {
   "near_pad" : 0x0041,
   "radius" : 20,
   "id" : 0x000A,
+  "grenade_odds" : 0,
 },
 0x1DA6E4 : {
   "position" : (6000.0991210938, 1021.1524047852),
@@ -20882,6 +20969,7 @@ guards = {
   "near_pad" : 0x0041,
   "radius" : 20,
   "id" : 0x000B,
+  "grenade_odds" : 0,
 },
 0x1DA8C0 : {
   "position" : (8813.2412109375, -1577.3157958984),
@@ -20889,6 +20977,7 @@ guards = {
   "near_pad" : 0x0057,
   "radius" : 20,
   "id" : 0x000C,
+  "grenade_odds" : 0,
 },
 0x1DAA9C : {
   "position" : (6547.1450195313, 470.79104614258),
@@ -20896,6 +20985,7 @@ guards = {
   "near_pad" : 0x0056,
   "radius" : 20,
   "id" : 0x000D,
+  "grenade_odds" : 0,
 },
 0x1DAC78 : {
   "position" : (7507.791015625, 388.73416137695),
@@ -20903,6 +20993,7 @@ guards = {
   "near_pad" : 0x0054,
   "radius" : 20,
   "id" : 0x000E,
+  "grenade_odds" : 7,
 },
 0x1DAE54 : {
   "position" : (7526.8549804688, 267.7209777832),
@@ -20910,6 +21001,7 @@ guards = {
   "near_pad" : 0x0055,
   "radius" : 20,
   "id" : 0x000F,
+  "grenade_odds" : 0,
 },
 0x1DB030 : {
   "position" : (7343.6772460938, 812.28033447266),
@@ -20917,6 +21009,7 @@ guards = {
   "near_pad" : 0x0062,
   "radius" : 20,
   "id" : 0x0010,
+  "grenade_odds" : 0,
 },
 0x1DB20C : {
   "position" : (7656.9853515625, -177.37550354004),
@@ -20924,6 +21017,7 @@ guards = {
   "near_pad" : 0x0060,
   "radius" : 20,
   "id" : 0x0011,
+  "grenade_odds" : 0,
 },
 0x1DB3E8 : {
   "position" : (7965.3203125, 5.8020024299622),
@@ -20931,6 +21025,7 @@ guards = {
   "near_pad" : 0x0060,
   "radius" : 20,
   "id" : 0x0012,
+  "grenade_odds" : 0,
 },
 0x1DB5C4 : {
   "position" : (9715.0380859375, 416.9153137207),
@@ -20938,6 +21033,7 @@ guards = {
   "near_pad" : 0x005C,
   "radius" : 20,
   "id" : 0x0013,
+  "grenade_odds" : 7,
 },
 0x1DB7A0 : {
   "position" : (9841.853515625, 315.79470825195),
@@ -20945,6 +21041,7 @@ guards = {
   "near_pad" : 0x005C,
   "radius" : 20,
   "id" : 0x0014,
+  "grenade_odds" : 0,
 },
 0x1DB97C : {
   "position" : (8845.5673828125, -1722.3658447266),
@@ -20952,6 +21049,7 @@ guards = {
   "near_pad" : 0x0057,
   "radius" : 20,
   "id" : 0x0015,
+  "grenade_odds" : 0,
 },
 0x1DBB58 : {
   "position" : (6437.7358398438, -2060.5397949219),
@@ -20959,6 +21057,7 @@ guards = {
   "near_pad" : 0x0089,
   "radius" : 20,
   "id" : 0x0016,
+  "grenade_odds" : 0,
 },
 0x1DBD34 : {
   "position" : (200.58351135254, 1230.0245361328),
@@ -20966,6 +21065,7 @@ guards = {
   "near_pad" : 0x0013,
   "radius" : 20,
   "id" : 0x0017,
+  "grenade_odds" : 0,
 },
 0x1DBF10 : {
   "position" : (6190.736328125, -2218.8515625),
@@ -20973,6 +21073,7 @@ guards = {
   "near_pad" : 0x008D,
   "radius" : 20,
   "id" : 0x0018,
+  "grenade_odds" : 7,
 },
 0x1DC0EC : {
   "position" : (8131.091796875, -5443.9360351563),
@@ -20980,6 +21081,7 @@ guards = {
   "near_pad" : 0x008E,
   "radius" : 20,
   "id" : 0x0019,
+  "grenade_odds" : 0,
 },
 0x1DC2C8 : {
   "position" : (7908.9580078125, -5511.0732421875),
@@ -20987,6 +21089,7 @@ guards = {
   "near_pad" : 0x008E,
   "radius" : 20,
   "id" : 0x001A,
+  "grenade_odds" : 0,
 },
 0x1DC4A4 : {
   "position" : (5691.7641601563, 1594.7218017578),
@@ -20994,6 +21097,7 @@ guards = {
   "near_pad" : 0x0038,
   "radius" : 20,
   "id" : 0x001B,
+  "grenade_odds" : 0,
 },
 0x1DC680 : {
   "position" : (5700.052734375, -28.181154251099),
@@ -21001,6 +21105,7 @@ guards = {
   "near_pad" : 0x003A,
   "radius" : 20,
   "id" : 0x001C,
+  "grenade_odds" : 0,
 },
 0x1DC85C : {
   "position" : (8741.130859375, 1394.9671630859),
@@ -21008,6 +21113,7 @@ guards = {
   "near_pad" : 0x0043,
   "radius" : 20,
   "id" : 0x001D,
+  "grenade_odds" : 7,
 },
 0x1DCA38 : {
   "position" : (6847.1918945313, 1246.6016845703),
@@ -21015,6 +21121,7 @@ guards = {
   "near_pad" : 0x0049,
   "radius" : 20,
   "id" : 0x001E,
+  "grenade_odds" : 0,
 },
 0x1DCC14 : {
   "position" : (6788.3427734375, 3347.7553710938),
@@ -21022,6 +21129,7 @@ guards = {
   "near_pad" : 0x004F,
   "radius" : 20,
   "id" : 0x001F,
+  "grenade_odds" : 0,
 },
 0x1DCDF0 : {
   "position" : (3133.0812988281, 638.22027587891),
@@ -21029,6 +21137,7 @@ guards = {
   "near_pad" : 0x0027,
   "radius" : 20,
   "id" : 0x0021,
+  "grenade_odds" : 0,
 },
 0x1DCFCC : {
   "position" : (3125.6215820313, 881.90435791016),
@@ -21036,6 +21145,7 @@ guards = {
   "near_pad" : 0x0028,
   "radius" : 20,
   "id" : 0x0022,
+  "grenade_odds" : 7,
 },
 0x1DD1A8 : {
   "position" : (6683.9067382813, 3239.1750488281),
@@ -21043,6 +21153,7 @@ guards = {
   "near_pad" : 0x0050,
   "radius" : 20,
   "id" : 0x0023,
+  "grenade_odds" : 0,
 },
 0x1DD384 : {
   "position" : (8644.154296875, 1327.8297119141),
@@ -21050,6 +21161,7 @@ guards = {
   "near_pad" : 0x0043,
   "radius" : 20,
   "id" : 0x0024,
+  "grenade_odds" : 0,
 },
 0x1DD560 : {
   "position" : (-559.47882080078, 19.892580032349),
@@ -21057,6 +21169,7 @@ guards = {
   "near_pad" : 0x0011,
   "radius" : 20,
   "id" : 0x0025,
+  "grenade_odds" : 0,
 },
 0x1DD73C : {
   "position" : (-850.40777587891, -611.69683837891),
@@ -21064,6 +21177,7 @@ guards = {
   "near_pad" : 0x0097,
   "radius" : 20,
   "id" : 0x0026,
+  "grenade_odds" : 0,
 },
 0x1DD918 : {
   "position" : (-823.88433837891, 681.32086181641),
@@ -21071,13 +21185,15 @@ guards = {
   "near_pad" : 0x0096,
   "radius" : 20,
   "id" : 0x0027,
+  "grenade_odds" : 7,
 },
 0x1DDAF4 : {
-  "position" : (403.6535949707, 2224.6535644531),
-  "tile" : 0x1A25CC,
-  "near_pad" : 0x0090,
+  "position" : (156.65406799316, 2219.6804199219),
+  "tile" : 0x1A1B8C,
+  "near_pad" : 0x0092,
   "radius" : 20,
   "id" : 0x0028,
+  "grenade_odds" : 0,
 },
 0x1DDCD0 : {
   "position" : (1764.6375732422, 213.84523010254),
@@ -21085,6 +21201,7 @@ guards = {
   "near_pad" : 0x0022,
   "radius" : 20,
   "id" : 0x002A,
+  "grenade_odds" : 7,
 },
 0x1DDEAC : {
   "position" : (1414.0308837891, 404.48245239258),
@@ -21092,13 +21209,15 @@ guards = {
   "near_pad" : 0x0021,
   "radius" : 20,
   "id" : 0x002B,
+  "grenade_odds" : 0,
 },
 0x1DE088 : {
-  "position" : (323.25442504883, 225.44923400879),
-  "tile" : 0x1B54E4,
-  "near_pad" : 0x0004,
+  "position" : (387.90530395508, 473.2776184082),
+  "tile" : 0x1B5504,
+  "near_pad" : 0x0002,
   "radius" : 20,
   "id" : 0x002C,
+  "grenade_odds" : 7,
 },
 0x1DE264 : {
   "position" : (994.62896728516, 1738.1141357422),
@@ -21106,6 +21225,7 @@ guards = {
   "near_pad" : 0x0015,
   "radius" : 20,
   "id" : 0x002D,
+  "grenade_odds" : 0,
 },
 0x1DE440 : {
   "position" : (3457.9934082031, 778.29718017578),
@@ -21113,6 +21233,7 @@ guards = {
   "near_pad" : 0x0026,
   "radius" : 20,
   "id" : 0x002E,
+  "grenade_odds" : 7,
 },
 0x1DE61C : {
   "position" : (5700.052734375, 1394.1383056641),
@@ -21120,6 +21241,7 @@ guards = {
   "near_pad" : 0x0039,
   "radius" : 20,
   "id" : 0x002F,
+  "grenade_odds" : 0,
 },
 0x1DE7F8 : {
   "position" : (5700.052734375, 161.62721252441),
@@ -21127,6 +21249,7 @@ guards = {
   "near_pad" : 0x003B,
   "radius" : 20,
   "id" : 0x0030,
+  "grenade_odds" : 7,
 },
 0x1DE9D4 : {
   "position" : (7753.9619140625, -55.533451080322),
@@ -21134,6 +21257,7 @@ guards = {
   "near_pad" : 0x0060,
   "radius" : 20,
   "id" : 0x0031,
+  "grenade_odds" : 0,
 },
 0x1DEBB0 : {
   "position" : (9175.4521484375, -1648.5975341797),
@@ -21141,6 +21265,7 @@ guards = {
   "near_pad" : 0x0058,
   "radius" : 20,
   "id" : 0x0032,
+  "grenade_odds" : 0,
 },
 0x1DED8C : {
   "position" : (2055.5666503906, -564.45196533203),
@@ -21148,6 +21273,7 @@ guards = {
   "near_pad" : 0x002F,
   "radius" : 20,
   "id" : 0x0033,
+  "grenade_odds" : 63,
 },
 0x1DEF68 : {
   "position" : (3194.4167480469, -716.13287353516),
@@ -21155,6 +21281,7 @@ guards = {
   "near_pad" : 0x002D,
   "radius" : 20,
   "id" : 0x0034,
+  "grenade_odds" : 63,
 },
 0x1DF144 : {
   "position" : (2250.3481445313, 2240.4018554688),
@@ -21162,6 +21289,7 @@ guards = {
   "near_pad" : 0x0035,
   "radius" : 20,
   "id" : 0x0035,
+  "grenade_odds" : 63,
 },
 0x1DF320 : {
   "position" : (7874.9750976563, 1388.3363037109),
@@ -21169,6 +21297,7 @@ guards = {
   "near_pad" : 0x0048,
   "radius" : 20,
   "id" : 0x0036,
+  "grenade_odds" : 63,
 },
 0x1DF4FC : {
   "position" : (7884.0922851563, 1632.0203857422),
@@ -21176,6 +21305,7 @@ guards = {
   "near_pad" : 0x0042,
   "radius" : 20,
   "id" : 0x0037,
+  "grenade_odds" : 63,
 },
 0x1DF6D8 : {
   "position" : (7727.4384765625, -1624.5606689453),
@@ -21183,6 +21313,7 @@ guards = {
   "near_pad" : 0x0065,
   "radius" : 20,
   "id" : 0x0039,
+  "grenade_odds" : 63,
 },
 0x1DF8B4 : {
   "position" : (8682.2822265625, 460.0158996582),
@@ -21190,6 +21321,7 @@ guards = {
   "near_pad" : 0x005E,
   "radius" : 20,
   "id" : 0x003B,
+  "grenade_odds" : 63,
 },
 0x1DFA90 : {
   "position" : (9725.8134765625, -832.17291259766),
@@ -21197,6 +21329,7 @@ guards = {
   "near_pad" : 0x005B,
   "radius" : 20,
   "id" : 0x003C,
+  "grenade_odds" : 63,
 },
 0x1DFC6C : {
   "position" : (9826.9345703125, -705.35772705078),
@@ -21204,6 +21337,7 @@ guards = {
   "near_pad" : 0x005B,
   "radius" : 20,
   "id" : 0x003D,
+  "grenade_odds" : 63,
 },
 0x1DFE48 : {
   "position" : (8388.8662109375, -1026.9544677734),
@@ -21211,6 +21345,7 @@ guards = {
   "near_pad" : 0x0059,
   "radius" : 20,
   "id" : 0x003E,
+  "grenade_odds" : 63,
 },
 0x1E0024 : {
   "position" : (8262.0517578125, -925.83380126953),
@@ -21218,6 +21353,7 @@ guards = {
   "near_pad" : 0x0059,
   "radius" : 20,
   "id" : 0x003F,
+  "grenade_odds" : 63,
 },
 0x1E0200 : {
   "position" : (8894.4697265625, -788.24346923828),
@@ -21225,6 +21361,7 @@ guards = {
   "near_pad" : 0x0059,
   "radius" : 20,
   "id" : 0x0040,
+  "grenade_odds" : 63,
 },
 0x1E03DC : {
   "position" : (8414.5615234375, -514.72052001953),
@@ -21232,6 +21369,7 @@ guards = {
   "near_pad" : 0x0059,
   "radius" : 20,
   "id" : 0x0041,
+  "grenade_odds" : 63,
 },
 0x1E05B8 : {
   "position" : (3272.3293457031, -692.09600830078),
@@ -21239,13 +21377,15 @@ guards = {
   "near_pad" : 0x002D,
   "radius" : 20,
   "id" : 0x0042,
+  "grenade_odds" : 63,
 },
 0x1E0794 : {
-  "position" : (8986.47265625, -4229.6596679688),
-  "tile" : 0x1A6194,
-  "near_pad" : 0x0083,
+  "position" : (8686.28125, -4091.5314941406),
+  "tile" : 0x1A57EC,
+  "near_pad" : 0x0082,
   "radius" : 20,
   "id" : 0x0043,
+  "grenade_odds" : 0,
 },
 }
 

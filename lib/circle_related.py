@@ -126,7 +126,7 @@ def getSphereIntersection(plane, tileAddrs, sphere_center, sphere_radius, tiles)
     # Return the radius and center (for arcs), and the list of polygon and arcs
     return radius, center, polyAndArcs
 
-def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH_HACK_FACTOR=13):
+def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH_HACK_FACTOR=13, base_colour='g', base_alpha=0.1):
     # NOTE that the ellipse code may be a bit off, particularly the angle.
     # In frigate it's nearly all completely flat
 
@@ -162,9 +162,6 @@ def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH
             width = 2*radius
             height = width*cosA
 
-            escape_alpha = 0.1
-            escape_colour = 'g'
-
             for poly, arcs in polyAndArcs:
                 # Note the poly may just be 2 points
                 if len(poly) >= 3:
@@ -172,7 +169,7 @@ def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH
                     zs = [z for x,y,z in poly]
                     xs.append(xs[0])
                     zs.append(zs[0])
-                    plt.fill(xs, zs, alpha=escape_alpha, fc=escape_colour)
+                    plt.fill(xs, zs, alpha=base_alpha, fc=base_colour)
 
                 # arcs :) 
                 for arc in arcs:
@@ -184,7 +181,7 @@ def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH
                     #   with high enough density hatching. This should be only dependent on resolution,
                     #   so the fixed value 13 should always work but it can be tuned.
                     # This does create a bit more work but it saves a lot of painful code.
-                    e = patches.Arc((-cx,cz), width, height, alpha=escape_alpha, ec=escape_colour, linewidth=0.5,
+                    e = patches.Arc((-cx,cz), width, height, alpha=base_alpha, ec=base_colour, linewidth=0.5,
                         angle=ellipse_angle, theta1=headings[0], theta2=headings[1], hatch='-'*HATCH_HACK_FACTOR)
                     
                     

@@ -6,7 +6,7 @@ from lib.stairs import markStairs
 from lib.path_finding import prepSets, getPathBetweenPads, drawPathWithinGroup
 import matplotlib.pyplot as plt
 import os
-from math import sqrt
+from math import sqrt, floor, ceil
 
 # Currently we're going to have a seperate py file for each level
 # Seems sensible since it may want to heavily customised what's drawn,
@@ -23,6 +23,7 @@ from level_specific.frigate.group_names import *
 def frig_specific(tilePlanes, currentTiles, plt, axs):
     # ------ Hostage escape areas ------
     HOSTAGE_HEIGHT = 105    # measured, varies +-9 but mostly + so this is pretty fair
+    BOND_HEIGHT = 167.3     # measured, standing on a flat tile
     ESCAPE_PAD_NUMS = [0x91, 0x93, 0xA9, 0x94, 0xA8, 0x8f]  # best to worst (when unloaded at least)
     HOSTAGE_IDS = [0x2c, 0x2d, 0x30, 0x31, 0x34, 0x35]
 
@@ -49,6 +50,33 @@ def frig_specific(tilePlanes, currentTiles, plt, axs):
 
             # `hostage` also has ["position"], ["tile"] so we can pass it as an extra first point
             drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, hostage)
+
+
+    # Noise addition(s) with D5K
+    maxNoise = 7
+    noiseIncr = 1.2
+    noises = [noiseIncr*i for i in range(1,ceil(maxNoise / noiseIncr))] + [maxNoise]
+    # Override with slightly more sensible ones
+    noises = [1.17, 2.27, 3.37, 4.43, 5.45, 6.38, 6.9125]
+    noise4_25 = (3*noises[3] + noises[4]) / 4   # barely more than 4 reaches the height
+
+    # Create the point using the guard's height and our height above the tiles
+    nadeGuard2 = guards[guardAddrWithId[0x22]]
+    gx, gz = nadeGuard2["position"]
+    gh = nadeGuard2["height"]
+    spherePos = (gx, gh - BOND_HEIGHT, gz)
+
+    # Through away all tiles which aren't above the hostage
+    higherTilePlanes = {}
+    for plane, tileAddrs in tilePlanes.items():
+        highTiles = [ta for ta in tileAddrs if max(tiles[ta]["heights"]) > gh]
+        higherTilePlanes[plane] = highTiles
+
+
+    # Start with the loudest
+    for noise in noises[::-1]:
+        sphere = (spherePos, noise*100)
+        colourSphereIntesectionWithTiles([sphere], higherTilePlanes, tiles, plt, axs, base_colour='#d1512e')
 
 
 # --------------------------------------------------------
