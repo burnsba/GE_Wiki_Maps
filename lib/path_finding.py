@@ -1,5 +1,13 @@
 import numpy as np
 
+def rotCWS(v):
+    x,z = v
+    return (z,-x)
+
+def rotACWS(v):
+    x,z = v
+    return (-z,x)
+
 def prepSets(sets,pads):
     # Convert pad index lists to pad lists
     indexToPadNum = dict((pd["index"], pn) for pn,pd in pads.items())
@@ -153,6 +161,7 @@ def walkAcrossTiles(currTile, n, a, universeTiles, endTiles, tiles, endPoint=Non
         if visitedTiles is not None:
             visitedTiles.append(currTile)
 
+        currTileAddr = currTile
         currTile = tiles[currTile]
         dispA = np.dot(currTile["points"][-1], n)
         index = -1
@@ -168,6 +177,7 @@ def walkAcrossTiles(currTile, n, a, universeTiles, endTiles, tiles, endPoint=Non
         assert index != -1
 
         # If desired, test the edge we're crossing against the limit point to see if we should stop
+        # Seems a weird way to do it looking back, hopefully it's reliable.
         
         if endPoint is not None:
             pntA = currTile["points"][index - 1]
@@ -176,7 +186,7 @@ def walkAcrossTiles(currTile, n, a, universeTiles, endTiles, tiles, endPoint=Non
             a2 = np.dot(pntA, n2)
             if np.dot(endPoint,n2) < a2:
                 # 2nd return will contain the endPoint
-                return currTile["links"][index - 1], currTile, None
+                return currTile["links"][index - 1], currTileAddr, None     # returning an address here vs dict below - hacky
 
         prevTile = currTile
         currTile = currTile["links"][index - 1]

@@ -9,15 +9,9 @@ from extremitypathfinder.helper_fcts import find_visible
 from math import atan2
 import numpy as np
 from itertools import repeat, count
-from .path_finding import walkAcrossTiles, getLineSegmentIntersection
+from .path_finding import walkAcrossTiles, getLineSegmentIntersection, rotCWS, rotACWS
 
-def rotCWS(v):
-    x,z = v
-    return (z,-x)
 
-def rotACWS(v):
-    x,z = v
-    return (-z,x)
 
 def walkClippingBoundary(addr, i, envTileAddrs, tiles, remExtEdges):
     """
@@ -224,6 +218,8 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
                 lastTile = tiles[tileAddr]
             else:
                 _, lastTile, _ = walkAcrossTiles(ourGuard["tile"], n, a, envTileAddrs, [0], tiles, endPoint=p)
+                if isinstance(lastTile, int):
+                    lastTile = tiles[lastTile]
         else:
             # Awkward case of glancing clipping corner
             # If we started at the source, we touch the clipping so could wrongly stop
