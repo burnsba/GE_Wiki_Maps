@@ -20,9 +20,12 @@ from math import sqrt, floor, ceil
 from level_specific.bunker_2.details import dividingTiles, startTileName, excludeDoorReachPresets
 from data.bunker_2 import tiles, guards, objects, pads, level_scale, sets, presets, activatable_objects
 from level_specific.bunker_2.group_names import *
+import numpy as np
+from lib.path_finding import rotACWS
+
+BOND_HEIGHT = 167.3     # measured in frigate, standing on a flat tile
 
 def noiseAroundGuardHelper(guardData, noises, tilePlanes, plt, axs, base_colour):
-    BOND_HEIGHT = 167.3     # measured in frigate, standing on a flat tile
 
     # Create the point using the guard's height and our height above the tiles
     gx, gz = guardData["position"]
@@ -34,6 +37,7 @@ def noiseAroundGuardHelper(guardData, noises, tilePlanes, plt, axs, base_colour)
         sphere = (spherePos, noise*100)
         colourSphereIntesectionWithTiles([sphere], tilePlanes, tiles, plt, axs, base_colour=base_colour)
 
+    return spherePos
 
 def bunker_2_specific(tilePlanes, currentTiles, plt, axs):
     guardAddrWithId = dict((gd["id"], addr) for addr, gd in guards.items())
@@ -46,13 +50,66 @@ def bunker_2_specific(tilePlanes, currentTiles, plt, axs):
     
 
     clipboardGuard = guards[guardAddrWithId[0x14]]
-    noiseAroundGuardHelper(clipboardGuard, [17.85, 19.85], tilePlanes, plt, axs, '#d1512e')
+    cbGuardSpherePos = noiseAroundGuardHelper(clipboardGuard, [17.85, 19.85], tilePlanes, plt, axs, '#d1512e')
 
     keyGuard1 = guards[guardAddrWithId[0xB]]
-    noiseAroundGuardHelper(keyGuard1, [3.966, 5.883, 7.809, 9.704, 11.528, 13.362], tilePlanes, plt, axs, '#1765e3')
+    noiseAroundGuardHelper(keyGuard1, [3.966, 5.883, 7.809, 9.704, 11.528, 13.362], tilePlanes, plt, axs, '#bab21e')
 
     # Not so specific but we won't want to draw it on every map
     drawSetBoundaries(sets, pads, currentTiles, tiles, plt)
+
+    # Creating the specific limit of the lure point
+    tilesByName = dict((tile["name"], addr) for addr, tile in tiles.items())
+    lureTiles = [tiles[tilesByName[n]] for n in [0x081F11, 0x080A11]]
+    lureEdge = []
+    for lt in lureTiles:
+        i = lt["links"].index(0)
+        i = (i+1) % len(lt["links"])
+        lureEdge.append(lt["points"][i])
+        lureEdge.append(lt["points"][i-1])
+
+    p = lureEdge[0]
+    maxDist, maxI = max((np.linalg.norm(np.subtract(p,q)),i) for i,q in enumerate(lureEdge[1:]))
+    q = lureEdge[maxI]  # q extreme, p may not be
+    v = np.subtract(p,q)
+    v = np.multiply(v, 1 / np.linalg.norm(v))
+    maxNorm, maxI = max((np.dot(v, np.subtract(r,q)), i) for i,r in enumerate(lureEdge))
+    p = lureEdge[maxI]  # p now extreme
+
+    # Get the halfplane (n,a)
+    n = rotACWS(v)
+    a = np.dot(n, q)
+
+    # Get the displacement to the target
+    t = cbGuardSpherePos[::2]
+    b = np.dot(n, t)
+    d = b - a
+
+    # Orientate away from the target
+    if d > 0:
+        a = -a
+        d = -d
+        n = np.multiply(n, -1)
+    
+    # Shift away by Bond's radius, compute the 'remaining radius'
+    br = 30
+    d -= br
+    sr = 19.85 * 100
+    hd = cbGuardSpherePos[1] - lureTiles[0]["heights"][0]   # sphere pos subtracts bond height
+    radius = sqrt(sr*sr - hd*hd - d*d)
+
+    # Find the mid point on our line (q + b*v), then the new extremes
+    b = np.dot(v, np.subtract(t,q))
+    
+    shift = np.multiply(br, n)
+    p = np.add(np.add(q, np.multiply(b + radius, v)), shift)
+    q = np.add(np.add(q, np.multiply(b - radius, v)), shift)
+    
+    # Draw
+    lureEdge = (q,p)
+    print(lureEdge)
+    xs,zs = zip(*lureEdge)
+    plt.plot([-x for x in xs], zs, linewidth=1, color='#1765e3')
 
 
 # --------------------------------------------------------
