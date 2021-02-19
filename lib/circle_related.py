@@ -193,7 +193,7 @@ def drawDoorReachability(plt, axs, objects, presets, currentTiles, excludePreset
             continue
         if obj["tile"] not in currentTiles:
             continue
-        if obj["extreme_clearance"]:
+        if obj.get("extreme_clearance"):
             continue
         if excludePresets is not None:
             if obj["preset"] in excludePresets:

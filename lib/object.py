@@ -78,7 +78,7 @@ def drawObjects(plt, axs, objects, tiles, currentTiles):
             zs += (zs[0],)
             plt.plot([-x for x in xs], zs, linewidth=0.5, color='r')
 
-        if "points" in obj:
+        if "points" in obj and len(obj["points"]) > 0:
             # Clean up points, removing duplicates
             pnts = obj["points"]
             pnts = obj["points"] = [p for p,q in zip(pnts, pnts[1:] + [pnts[0]]) if euclidDist(p,q) > 0.001]
@@ -117,7 +117,7 @@ def drawObjects(plt, axs, objects, tiles, currentTiles):
         if obj["type"] == "door":
             if obj["door_type"] not in [4,5,9]:
                 print("Unsupported door type {}".format(obj["door_type"]))
-            if obj["extreme_clearance"]:
+            if obj.get("extreme_clearance"):
                 pass #print("Door with extreme clearance ignored")
             if len(obj.get("hinges", [])) > 0 and not obj["extreme_clearance"]:
                 assert len(obj["hinges"]) <= 2
