@@ -126,7 +126,7 @@ def getSphereIntersection(plane, tileAddrs, sphere_center, sphere_radius, tiles)
     # Return the radius and center (for arcs), and the list of polygon and arcs
     return radius, center, polyAndArcs
 
-def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH_HACK_FACTOR=13, base_colour='g', base_alpha=0.1):
+def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, fill=True, HATCH_HACK_FACTOR=13, base_colour='g', base_alpha=0.1, inclTileTest=None):
     # NOTE that the ellipse code may be a bit off, particularly the angle.
     # In frigate it's nearly all completely flat
 
@@ -139,6 +139,8 @@ def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH
 
         for plane, tileAddrs in tilePlanes.items():
             n, _ = plane
+            if inclTileTest is not None:
+                tileAddrs = [ta for ta in tileAddrs if inclTileTest(ta, tiles)]
 
             # Ignore any vertical planes
             if n[1] == 0:
@@ -164,7 +166,7 @@ def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH
 
             for poly, arcs in polyAndArcs:
                 # Note the poly may just be 2 points
-                if len(poly) >= 3:
+                if fill and len(poly) >= 3:
                     xs = [-x for x,y,z in poly]
                     zs = [z for x,y,z in poly]
                     xs.append(xs[0])
@@ -182,7 +184,7 @@ def colourSphereIntesectionWithTiles(spheres, tilePlanes, tiles, plt, axs, HATCH
                     #   so the fixed value 13 should always work but it can be tuned.
                     # This does create a bit more work but it saves a lot of painful code.
                     e = patches.Arc((-cx,cz), width, height, alpha=base_alpha, ec=base_colour, linewidth=0.5,
-                        angle=ellipse_angle, theta1=headings[0], theta2=headings[1], hatch='-'*HATCH_HACK_FACTOR)
+                        angle=ellipse_angle, theta1=headings[0], theta2=headings[1], hatch=('-'*HATCH_HACK_FACTOR if fill else None))
                     
                     
                     axs.add_patch(e)
@@ -202,7 +204,7 @@ def drawDoorReachability(plt, axs, objects, presets, currentTiles, excludePreset
                 continue
 
         preset = presets[10000 + obj["preset"]]
-        assert preset["normal_y"][1] > 0.99     # we assume our doors are upright, simplier projection
+        assert abs(preset["normal_y"][1]) > 0.99, preset     # we assume our doors are upright OR INVERTED, simplier projection
 
         pos_x, _, pos_z = preset["position"]
 

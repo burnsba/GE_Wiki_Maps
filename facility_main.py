@@ -127,9 +127,9 @@ def main(plt, tiles, dividingTiles, startTileName, objects, level_scale, GROUP_N
 
 
 if __name__ == "__main__":
-    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 1, 'facility_start')
-    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 0, 'facility_downstairs')
-    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 2, 'facility_upstairs')
-    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 3, 'facility_ending')
+    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 1, 'facility/facility_start')
+    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 0, 'facility/facility_downstairs')
+    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 2, 'facility/facility_upstairs')
+    main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 3, 'facility/facility_ending')
     ##main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 4, 'facility_E')
     ##main(plt, tiles, dividingTiles, startTileName, objects, level_scale, 5, 'facility_F')

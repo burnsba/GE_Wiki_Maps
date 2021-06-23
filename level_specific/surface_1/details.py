@@ -1,5 +1,4 @@
 
-# Frigate divisions.
 # Include them the first time we reach them, but not again
 
 dividingTiles = [
@@ -9,3 +8,7 @@ dividingTiles = [
 ]
 
 startTileName = 0x07E500
+
+excludeDoorReachPresets = [
+    0x2740, # Grate for the ending
+]

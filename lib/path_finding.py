@@ -1,4 +1,5 @@
 import numpy as np
+import math 
 
 def rotCWS(v):
     x,z = v
@@ -200,7 +201,7 @@ def walkAcrossTiles(currTile, n, a, universeTiles, endTiles, tiles, endPoint=Non
     return currTile, prevTile, intersectP
 
 
-def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, stdColour='b', padRadius=3):
+def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, stdColour='b', secretColour='r', padRadius=3, linewidth=0.5):
     # If guard is not None, use their starting point. Should be data.
     # Should cope with paths entering and leaving the group many times, though it's untested
 
@@ -242,10 +243,11 @@ def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, s
     for edge in fullEdges:
         xs, ys, zs = zip(*[pads[path[x]]["position"] for x in edge])
         xs = [-x for x in xs]
-        plt.plot(xs, zs, linewidth=0.5, color=stdColour)
+        plt.plot(xs, zs, linewidth=linewidth, color=stdColour)
         # Mark destinations - source will be the responsibility of
         # a partial edge, previous complete edge, or is the guard so is covered.
-        axs.add_artist(plt.Circle((xs[1], zs[1]), padRadius, color=stdColour, linewidth=0.5, fill=True))
+        if padRadius > 0:
+            axs.add_artist(plt.Circle((xs[1], zs[1]), padRadius, color=stdColour, linewidth=linewidth, fill=True))
 
     # Walk along the partial edges across tiles, to contain them within the current group
     for p,q in exitingEdges:
@@ -257,8 +259,8 @@ def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, s
         n = np.multiply(n, 1 / np.linalg.norm(n))   # unit normal
         a = np.dot(n, startPos)
 
-        if p > q:   # swish
-            axs.add_artist(plt.Circle((-startPos[0], startPos[1]), padRadius, color=stdColour, linewidth=0.5, fill=True))
+        if p > q and padRadius > 0:   # swish
+            axs.add_artist(plt.Circle((-startPos[0], startPos[1]), padRadius, color=stdColour, linewidth=linewidth, fill=True))
 
         currTile = pd["tile"]
         targetTile = qd["tile"]
@@ -271,7 +273,7 @@ def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, s
         if currTile != 0:
             xs = [-pd["position"][0], -intersectP[0]]
             zs = [pd["position"][2], intersectP[1]]
-            plt.plot(xs, zs, linewidth=0.5, color=stdColour)
+            plt.plot(xs, zs, linewidth=linewidth, color=stdColour)
 
         else:
             # Should be similar to the S1 secret entrance, where the edge goes to the tile above us,
@@ -279,8 +281,19 @@ def drawPathWithinGroup(plt, axs, path, pads, currentTiles, tiles, guard=None, s
             # Draw the entire line in red to highlight this.
             xs, ys, zs = zip(*[pads[path[x]]["position"] for x in [p,q]])
             xs = [-x for x in xs]
-            plt.plot(xs, zs, linewidth=0.5, color='r')
-            axs.add_artist(plt.Circle((xs[1], zs[1]), padRadius, color='r', linewidth=0.5, fill=True))
+            plt.plot(xs, zs, linewidth=linewidth, color=secretColour)
+            if padRadius > 0:
+                axs.add_artist(plt.Circle((xs[1], zs[1]), padRadius, color=secretColour, linewidth=linewidth, fill=True))
 
     if guard is not None:
         del pads[None]
+
+
+def getPathTime(guard, path, pads, frameSpeed):
+    totalDist = 0
+    positions = ([(guard["position"], "Start")] if guard else []) + [(pads[p]["position"][::2], hex(p)) for p in path]
+    for (p,p_name),(q,q_name) in zip(positions, positions[1:]):
+        disp = np.subtract(p, q)
+        dist = math.ceil(np.linalg.norm(disp) / frameSpeed)
+        totalDist += dist
+    return totalDist

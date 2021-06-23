@@ -57,7 +57,7 @@ def walkClippingBoundary(addr, i, envTileAddrs, tiles, remExtEdges):
     
     return pnts, origins
 
-def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreTileAddrs = None, objTransforms = None):
+def drawFOV(guardOrPad, rooms, tiles, guards, objects, opaque_objects, plt, ignoreTileAddrs = None, objTransforms = None):
     """
     [!] The rooms you give must be simply linked i.e. project flat. i.e. only 1 floor
     Otherwise this will likely enter an infinite loop looking for the boundary
@@ -67,10 +67,10 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
     if objTransforms is None:
         objTransforms = dict()
     
-    # Get our 'guard'.
-    ourGuard = [g for g in guards.values() if g["id"] == guardId][0]
-    guardPos = ourGuard["position"] 
-    guardRoom = tiles[ourGuard["tile"]]["room"]
+    guardPos = guardOrPad["position"]
+    if len(guardPos) == 3:
+        guardPos = guardPos[::2]
+    guardRoom = tiles[guardOrPad["tile"]]["room"]
     
     # 0. Ignore tiles used to ensure our boundary polygon doesn't overlap at all
     ignoreTileAddrs = set() if ignoreTileAddrs is None else set(ignoreTileAddrs)
@@ -217,7 +217,7 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
             if isClipping:
                 lastTile = tiles[tileAddr]
             else:
-                _, lastTile, _ = walkAcrossTiles(ourGuard["tile"], n, a, envTileAddrs, [0], tiles, endPoint=p)
+                _, lastTile, _ = walkAcrossTiles(guardOrPad["tile"], n, a, envTileAddrs, [0], tiles, endPoint=p)
                 if isinstance(lastTile, int):
                     lastTile = tiles[lastTile]
         else:
@@ -241,11 +241,11 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
                     tilePntI = tiles[l]["links"].index(tileAddr)
                     tileAddr = l
 
-                _ = walkAcrossTiles(ourGuard["tile"], n, a, envTileAddrs, [0], tiles, endPoint=p, visitedTiles=visitedTiles)
+                _ = walkAcrossTiles(guardOrPad["tile"], n, a, envTileAddrs, [0], tiles, endPoint=p, visitedTiles=visitedTiles)
             else:
                 # For an object, we can't easily establish a start tile,
                 #   so we just start at the source
-                tileAddr = ourGuard["tile"]
+                tileAddr = guardOrPad["tile"]
                 
 
             # Get the far clipping collision, and complete the list of tiles
@@ -264,7 +264,10 @@ def drawFOV(guardId, rooms, tiles, guards, objects, opaque_objects, plt, ignoreT
                 
 
         if lastTile["room"] != guardRoom:
-            borderData = (visitedTiles[lastInGuardRoom:lastInGuardRoom+2], n, a, p, q)
+
+            vt = (visitedTiles + [lastTile])[lastInGuardRoom:lastInGuardRoom+2] # hacky patch, sometimes he's not included
+            assert len(vt) == 2
+            borderData = (vt, n, a, p, q)
             if inside:
                 # Exiting
                 currPoly = [borderData, []]

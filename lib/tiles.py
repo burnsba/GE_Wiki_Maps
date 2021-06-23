@@ -57,7 +57,7 @@ def drawTiles(currentTiles, tiles, colour, axs, alpha=1):
         drawTile(tiles[tileAddr], colour, axs, alpha) # light grey
 
 
-def drawTileHardEdges(currentTiles, tiles, colour, axs):
+def drawTileHardEdges(currentTiles, tiles, colour, axs, linewidth=1):
     for tileAddr in currentTiles:
         td = tiles[tileAddr]
         xs, zs = zip(*td["points"])
@@ -68,7 +68,7 @@ def drawTileHardEdges(currentTiles, tiles, colour, axs):
             if l != 0:
                 continue
 
-            axs.plot(xs[i:i+2], zs[i:i+2], color=colour, linewidth=1)
+            axs.plot(xs[i:i+2], zs[i:i+2], color=colour, linewidth=linewidth)
 
 
 # -------------- Tile planes ---------------

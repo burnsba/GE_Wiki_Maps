@@ -5,6 +5,7 @@ require "Utilities\\GE\\ObjectDataReader"
 require "Utilities\\GE\\GuardDataReader"
 require "Data\\GE\\PresetData"
 require "Data\\GE\\ScriptData"
+require "Data\\GE\\Version"
 
 -- ===========================================
 local PRINT_TILES = true
@@ -17,7 +18,12 @@ local PRINT_PRESETS = true
 PRINT_OBJECTS = PRINT_OBJECTS and PRINT_TILES   -- objects needs tiles to get all rooms
 
 local mission_name = GameData.get_mission_name(GameData.get_current_mission())
-local filename = ("data\\" .. mission_name .. ".py"):lower()
+local suffix = ({
+    ['U'] = '',
+    ['P'] = '_PAL',
+    ['J'] = '_J',
+})[__GE_VERSION__]
+local filename = ("data\\" .. mission_name .. suffix .. ".py"):lower()
 console.log("Dumping to " .. filename)
 
 -- ===========================================
@@ -60,6 +66,11 @@ if PRINT_TILES then
         end
         file:write("],", "\n")
         file:write("  \"name\" : " .. ("0x%06X"):format(TileData:get_value(tile, "name")) .. ",", "\n")
+
+        -- Near pad restored for B1-esque drawing
+        local near_pad = TileData.getPrelimNearPad(tile)
+        local near_pad_num = PadData:get_value(near_pad, "number")
+        file:write("  \"nearPad\" : " .. ("0x%04X"):format(near_pad_num) .. ",", "\n")
 
         file:write("},", "\n")
     end
@@ -172,6 +183,7 @@ if PRINT_OBJECTS then
 
             if position ~= 0 then
                 file:write("  \"position\" : (" .. position.x .. ", " .. position.z .. "),", "\n")
+                file:write("  \"height\" : " .. position.y .. ",", "\n")
             end
 
             if odr:has_value("health") then
@@ -236,6 +248,7 @@ if PRINT_GUARDS then
         local cr = gdr:get_value("collision_radius")
         local id = gdr:get_value("id")
         local grenadeOdds = gdr:get_value("belligerency")
+        local facing_angle = GuardData.facing_angle(gdr.current_address)
         file:write(("0x%06X"):format(gdr.current_address) .. " : {", "\n")
         file:write("  \"position\" : (" .. pos.x .. ", " .. pos.z .. "),", "\n") -- historically no y, so added seperately as height
         file:write("  \"height\" : " .. pos.y .. ",", "\n")
@@ -244,6 +257,7 @@ if PRINT_GUARDS then
         file:write("  \"radius\" : " .. cr .. ",", "\n")
         file:write(("  \"id\" : 0x%04X,"):format(id), "\n")
         file:write("  \"grenade_odds\" : " .. grenadeOdds .. ",", "\n")
+        file:write("  \"facing_angle\" : " .. facing_angle .. ",", "\n")
         file:write("},", "\n")
     end)
 
@@ -256,11 +270,14 @@ if PRINT_PADS then
     local somePadInfo = memory.read_u32_be(0x075d18) - 0x80000000
     local padPtr = PadData.get_start_address()
     local index = 0
+    local seenPadNums = {}
+    local n
 	while true do
-		local n = PadData:get_value(padPtr, "number")
+		n = PadData:get_value(padPtr, "number")
         if n == -1 then
             break
         end
+        seenPadNums[n] = true
         local pos = PadData.padPosFromNum(n)
         local set = PadData:get_value(padPtr, "setIndex")
         local assocTile = memory.read_u32_be(somePadInfo + (0x2c * n) + 0x28) - 0x80000000
@@ -281,6 +298,29 @@ if PRINT_PADS then
         index = index + 1
     end
     
+    file:write("}", "\n")
+
+    -- Further 00 pads which aren't in sets:
+    file:write("\nlone_pads = {", "\n")
+    n = 0
+    while true do
+        local pi = somePadInfo + 0x2c * n
+        local assocTile = memory.read_u32_be(pi + 0x28)
+        if assocTile == 0 then   -- Just a guess for the signal that we're done. Seems to work on Egypt
+            break
+        end
+
+        if not seenPadNums[n] then
+            local pos = PadData.padPosFromNum(n)
+            file:write(("0x%04X : {\n"):format(n))
+            file:write("  \"position\" : (" .. pos.x .. ", " .. pos.y .. ", " .. pos.z .. "),", "\n")
+            file:write(("  \"tile\" : 0x%06X,"):format(assocTile - 0x80000000), "\n")
+            file:write("},", "\n")
+            seenPadNums[n] = true
+        end
+        n = n + 1
+    end
+
     file:write("}", "\n")
 end
 
