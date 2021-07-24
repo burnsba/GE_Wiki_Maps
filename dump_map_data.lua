@@ -193,7 +193,23 @@ if PRINT_OBJECTS then
             if type == "door" then
                 local doorType = DoorData:get_value(odr.current_address, "hinge_type")  -- 4 is roller door?
                 local hingePositions = doorDataGetHinges(odr.current_address)
+                local max_displacement_percentage = DoorData:get_value(odr.current_address, "max_displacement_percentage")
+                local walkthrough_distance = DoorData:get_value(odr.current_address, "walkthrough_distance")
+                local acceleration = DoorData:get_value(odr.current_address, "acceleration")
+                local rate = DoorData:get_value(odr.current_address, "rate")
+                local max_speed = DoorData:get_value(odr.current_address, "max_speed")
+                local max_displacement = DoorData:get_value(odr.current_address, "max_displacement")
+                local displacement_percentage = DoorData:get_value(odr.current_address, "displacement_percentage")
+                local speed_percentage = DoorData:get_value(odr.current_address, "speed_percentage")
                 file:write("  \"door_type\" : " .. doorType .. ",", "\n")
+                file:write("  \"max_displacement_percentage\" : " .. max_displacement_percentage .. ",", "\n")
+                file:write("  \"walkthrough_distance\" : " .. walkthrough_distance .. ",", "\n")
+                file:write("  \"acceleration\" : " .. acceleration .. ",", "\n")
+                file:write("  \"rate\" : " .. rate .. ",", "\n")
+                file:write("  \"max_speed\" : " .. max_speed .. ",", "\n")
+                file:write("  \"max_displacement\" : " .. max_displacement .. ",", "\n")
+                file:write("  \"displacement_percentage\" : " .. displacement_percentage .. ",", "\n")
+                file:write("  \"speed_percentage\" : " .. speed_percentage .. ",", "\n")
                 file:write("  \"hinges\" : [")
                 if table.getn(hingePositions) > 0 then
                     file:write("\n")
